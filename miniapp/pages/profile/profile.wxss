@@ -219,6 +219,15 @@
   border-top: 1rpx solid #f0f1f4;
 }
 
+.setting-row {
+  min-height: 104rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  border-top: 1rpx solid #f0f1f4;
+}
+
 .payment-name {
   color: #20242a;
   font-size: 28rpx;
@@ -261,5 +270,8 @@
 }
 
 .dev-text {
-  display: none;
+  margin-top: 18rpx;
+  color: #8a8f98;
+  font-size: 22rpx;
+  text-align: center;
 }

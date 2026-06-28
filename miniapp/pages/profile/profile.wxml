@@ -24,6 +24,7 @@
       <view class="menu-title">{{item.title}}</view>
       <view wx:if="{{item.action === 'goFavorites' && favoriteCount > 0}}" class="menu-extra">{{favoriteCount}}</view>
       <view wx:if="{{item.action === 'openPaymentSheet'}}" class="menu-sub">{{paymentMethod.name}}</view>
+      <view wx:if="{{item.action === 'openSettingsSheet'}}" class="menu-sub">{{settings.orderNotice ? '通知开启' : '通知关闭'}}</view>
       <view class="chevron">›</view>
     </view>
   </view>
@@ -42,5 +43,31 @@
     </view>
   </view>
 
-  <view class="dev-text">接口地址：{{baseUrl}}</view>
+  <view wx:if="{{settingsSheetVisible}}" class="sheet-mask" bindtap="closeSettingsSheet"></view>
+  <view wx:if="{{settingsSheetVisible}}" class="payment-sheet">
+    <view class="sheet-title">设置</view>
+    <view class="setting-row">
+      <view>
+        <view class="payment-name">订单通知</view>
+        <view class="payment-desc">接收订单状态变化提醒</view>
+      </view>
+      <switch checked="{{settings.orderNotice}}" data-key="orderNotice" bindchange="toggleSetting" color="#ff6a00" />
+    </view>
+    <view class="setting-row">
+      <view>
+        <view class="payment-name">自动定位</view>
+        <view class="payment-desc">进入首页时使用默认定位信息</view>
+      </view>
+      <switch checked="{{settings.autoLocation}}" data-key="autoLocation" bindchange="toggleSetting" color="#ff6a00" />
+    </view>
+    <view class="setting-row">
+      <view>
+        <view class="payment-name">开发信息</view>
+        <view class="payment-desc">在个人中心显示当前接口地址</view>
+      </view>
+      <switch checked="{{settings.showDevInfo}}" data-key="showDevInfo" bindchange="toggleSetting" color="#ff6a00" />
+    </view>
+  </view>
+
+  <view wx:if="{{settings.showDevInfo}}" class="dev-text">接口地址：{{baseUrl}}</view>
 </view>

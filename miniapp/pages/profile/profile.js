@@ -3,6 +3,7 @@ const authService = require('../../services/auth')
 const favoriteService = require('../../services/favorite')
 const paymentService = require('../../services/payment')
 const profileService = require('../../services/profile')
+const settingsService = require('../../services/settings')
 
 Page({
   data: {
@@ -12,6 +13,8 @@ Page({
     paymentMethod: paymentService.getPaymentMethod(),
     paymentSheetVisible: false,
     paymentMethods: paymentService.getPaymentMethods(),
+    settings: settingsService.getSettings(),
+    settingsSheetVisible: false,
     loggingIn: false,
     profileStats: profileService.getProfileStats(null),
     menus: [
@@ -20,7 +23,7 @@ Page({
       { icon: '♡', title: '收藏商家', action: 'goFavorites' },
       { icon: '▣', title: '支付方式', action: 'openPaymentSheet' },
       { icon: '⌖', title: '收货地址', action: 'goAddresses' },
-      { icon: '⚙', title: '设置', action: '' }
+      { icon: '⚙', title: '设置', action: 'openSettingsSheet' }
     ]
   },
 
@@ -31,6 +34,7 @@ Page({
       user,
       favoriteCount: favoriteService.listFavorites().length,
       paymentMethod: paymentService.getPaymentMethod(),
+      settings: settingsService.getSettings(),
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -42,6 +46,7 @@ Page({
       user,
       favoriteCount: favoriteService.listFavorites().length,
       paymentMethod: paymentService.getPaymentMethod(),
+      settings: settingsService.getSettings(),
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -97,6 +102,19 @@ Page({
       title: '已切换支付方式',
       icon: 'none'
     })
+  },
+
+  openSettingsSheet() {
+    this.setData({ settingsSheetVisible: true })
+  },
+
+  closeSettingsSheet() {
+    this.setData({ settingsSheetVisible: false })
+  },
+
+  toggleSetting(event) {
+    const settings = settingsService.updateSetting(event.currentTarget.dataset.key, event.detail.value)
+    this.setData({ settings })
   },
 
   async login() {
@@ -161,10 +179,11 @@ Page({
       this.openPaymentSheet()
       return
     }
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+    if (action === 'openSettingsSheet') {
+      this.openSettingsSheet()
+      return
+    }
+    return null
   },
 
   buildStats() {
