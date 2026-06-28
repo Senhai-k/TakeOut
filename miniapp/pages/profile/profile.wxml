@@ -1,31 +1,25 @@
 <view class="profile-page">
   <view class="profile-card">
-    <view class="avatar">{{user ? user.avatarText : '未'}}</view>
-    <view class="user-main">
-      <view class="user-name">{{user ? user.nickname : '未登录'}}</view>
-      <view class="badge">{{user ? user.memberLevel : '未登录'}}</view>
-      <view class="user-phone" wx:if="{{user}}">{{user.phone}}</view>
+    <view class="profile-main">
+      <view class="avatar">{{user ? user.avatarText : '未'}}</view>
+      <view class="user-main">
+        <view class="user-name">{{user ? user.nickname : '未登录'}}</view>
+        <view class="user-meta">{{user ? user.phone : '登录后同步订单和地址'}}</view>
+      </view>
     </view>
     <button wx:if="{{!user}}" class="login-btn" loading="{{loggingIn}}" bindtap="login">登录</button>
+    <view wx:else class="member-tag">{{user.memberLevel}}</view>
   </view>
 
   <view class="stats panel">
-    <view class="stat">
-      <view class="stat-value">45单</view>
-      <view class="stat-label">累计订单</view>
-    </view>
-    <view class="stat">
-      <view class="stat-value">¥567.00</view>
-      <view class="stat-label">累计消费</view>
-    </view>
-    <view class="stat">
-      <view class="stat-value">1230分</view>
-      <view class="stat-label">奖励积分</view>
+    <view wx:for="{{profileStats}}" wx:key="label" class="stat">
+      <view class="stat-value">{{item.value}}</view>
+      <view class="stat-label">{{item.label}}</view>
     </view>
   </view>
 
-  <view class="menu-list">
-    <view wx:for="{{menus}}" wx:key="title" class="panel menu-card" bindtap="handleMenu" data-action="{{item.action}}">
+  <view class="panel menu-list">
+    <view wx:for="{{menus}}" wx:key="title" class="menu-card" bindtap="handleMenu" data-action="{{item.action}}">
       <view class="menu-icon">{{item.icon}}</view>
       <view class="menu-title">{{item.title}}</view>
       <view class="chevron">›</view>

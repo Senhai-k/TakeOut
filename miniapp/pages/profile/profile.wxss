@@ -1,47 +1,82 @@
 .profile-page {
   min-height: 100vh;
-  padding: 20rpx;
-  background: #f7f7f8;
+  padding: 20rpx 20rpx 48rpx;
+  background: #f5f6f8;
 }
 
 .profile-card {
-  min-height: 188rpx;
-  padding: 26rpx;
-  border-radius: 20rpx;
-  background: linear-gradient(135deg, #ffead8, #ffffff);
+  min-height: 168rpx;
+  padding: 28rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, #fff4eb 0%, #ffffff 76%);
   display: flex;
   align-items: center;
-  box-shadow: 0 10rpx 28rpx rgba(255, 106, 0, 0.1);
+  justify-content: space-between;
+  border: 1rpx solid #f0e7df;
+  box-shadow: 0 10rpx 26rpx rgba(30, 34, 40, 0.05);
+}
+
+.profile-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 .avatar {
-  width: 96rpx;
-  height: 96rpx;
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 50%;
   background: #ffffff;
   color: #ff6a00;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42rpx;
+  font-size: 38rpx;
   font-weight: 900;
-  box-shadow: 0 8rpx 20rpx rgba(30, 34, 40, 0.08);
+  box-shadow: 0 8rpx 18rpx rgba(255, 106, 0, 0.1);
 }
 
 .user-main {
-  flex: 1;
-  padding-left: 22rpx;
+  min-width: 0;
+  padding-left: 20rpx;
 }
 
 .user-name {
-  margin-bottom: 12rpx;
-  font-size: 36rpx;
+  font-size: 34rpx;
+  font-weight: 900;
+  line-height: 42rpx;
+}
+
+.user-meta {
+  max-width: 360rpx;
+  margin-top: 10rpx;
+  color: #8a8f98;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-btn {
+  width: 144rpx;
+  height: 58rpx;
+  margin: 0 0 0 20rpx;
+  border-radius: 999rpx;
+  background: #ff6a00;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25rpx;
   font-weight: 900;
 }
 
-.badge {
-  width: 156rpx;
-  height: 44rpx;
+.member-tag {
+  min-width: 120rpx;
+  height: 52rpx;
+  margin-left: 20rpx;
+  padding: 0 22rpx;
   border-radius: 999rpx;
   background: #ff6a00;
   color: #ffffff;
@@ -52,30 +87,9 @@
   font-weight: 800;
 }
 
-.user-phone {
-  margin-top: 10rpx;
-  color: #8a5a2a;
-  font-size: 24rpx;
-  font-weight: 700;
-}
-
-.login-btn {
-  width: 132rpx;
-  height: 64rpx;
-  margin: 0;
-  border-radius: 999rpx;
-  background: #ff6a00;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26rpx;
-  font-weight: 900;
-}
-
 .stats {
-  margin: 18rpx 0;
-  padding: 20rpx 0;
+  margin: 18rpx 0 20rpx;
+  padding: 22rpx 0;
   display: flex;
 }
 
@@ -91,50 +105,58 @@
 
 .stat-value {
   color: #20242a;
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: 900;
+  line-height: 38rpx;
 }
 
 .stat-label {
-  margin-top: 8rpx;
+  margin-top: 10rpx;
   color: #8a8f98;
   font-size: 22rpx;
 }
 
 .menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14rpx;
+  overflow: hidden;
 }
 
 .menu-card {
-  min-height: 86rpx;
-  padding: 0 20rpx;
+  min-height: 92rpx;
+  padding: 0 24rpx;
   display: flex;
   align-items: center;
+  border-bottom: 1rpx solid #f0f1f4;
+}
+
+.menu-card:last-child {
+  border-bottom: 0;
 }
 
 .menu-icon {
-  width: 52rpx;
-  height: 52rpx;
-  border-radius: 14rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
   background: #fff1e8;
   color: #ff6a00;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 24rpx;
   font-weight: 900;
 }
 
 .menu-title {
   flex: 1;
-  padding-left: 18rpx;
+  padding-left: 20rpx;
+  color: #20242a;
+  font-size: 29rpx;
   font-weight: 800;
 }
 
 .chevron {
   color: #b3b8c1;
-  font-size: 42rpx;
+  font-size: 40rpx;
+  line-height: 40rpx;
 }
 
 .logout {

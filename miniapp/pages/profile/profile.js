@@ -1,11 +1,24 @@
 const app = getApp()
 const authService = require('../../services/auth')
 
+const EMPTY_STATS = [
+  { label: '累计订单', value: '0' },
+  { label: '累计消费', value: '0' },
+  { label: '奖励积分', value: '0' }
+]
+
+const USER_STATS = [
+  { label: '累计订单', value: '45' },
+  { label: '累计消费', value: '567' },
+  { label: '奖励积分', value: '1230' }
+]
+
 Page({
   data: {
     baseUrl: '',
     user: null,
     loggingIn: false,
+    profileStats: EMPTY_STATS,
     menus: [
       { icon: '⏱', title: '订单历史', action: 'goOrders' },
       { icon: '🏪', title: '商家订单', action: 'goMerchantOrders' },
@@ -17,15 +30,19 @@ Page({
   },
 
   onLoad() {
+    const user = authService.getStoredUser()
     this.setData({
       baseUrl: app.globalData.baseUrl,
-      user: authService.getStoredUser()
+      user,
+      profileStats: this.buildStats(user)
     })
   },
 
   onShow() {
+    const user = authService.getStoredUser()
     this.setData({
-      user: authService.getStoredUser()
+      user,
+      profileStats: this.buildStats(user)
     })
   },
 
@@ -54,7 +71,10 @@ Page({
     this.setData({ loggingIn: true })
     try {
       const user = await authService.loginDefaultUser()
-      this.setData({ user })
+      this.setData({
+        user,
+        profileStats: this.buildStats(user)
+      })
       wx.showToast({
         title: '登录成功',
         icon: 'success'
@@ -66,7 +86,10 @@ Page({
 
   logout() {
     authService.clearUser()
-    this.setData({ user: null })
+    this.setData({
+      user: null,
+      profileStats: this.buildStats(null)
+    })
     wx.showToast({
       title: '已退出登录',
       icon: 'none'
@@ -75,6 +98,13 @@ Page({
 
   handleMenu(event) {
     const action = event.currentTarget.dataset.action
+    if (!this.data.user && ['goOrders', 'goAddresses'].includes(action)) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      })
+      return
+    }
     if (action === 'goOrders') {
       this.goOrders()
       return
@@ -91,5 +121,9 @@ Page({
       title: '功能开发中',
       icon: 'none'
     })
+  },
+
+  buildStats(user) {
+    return user ? USER_STATS : EMPTY_STATS
   }
 })
