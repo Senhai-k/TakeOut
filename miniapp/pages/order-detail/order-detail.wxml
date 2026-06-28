@@ -85,9 +85,28 @@
       </view>
     </view>
 
-    <view wx:if="{{order.canPay || order.canCancel || order.canComplete || order.canReorder}}" class="bottom-actions">
+    <view wx:if="{{order.orderStatus === 60}}" class="panel review-panel">
+      <view class="section-title">订单评价</view>
+      <view wx:if="{{order.review}}" class="review-result">
+        <view class="review-stars">
+          <text wx:for="{{ratingOptions}}" wx:key="*this" class="{{item <= order.review.rating ? 'star active' : 'star'}}">★</text>
+        </view>
+        <view class="review-content">{{order.review.content || '用户未填写文字评价'}}</view>
+        <view class="review-time">{{order.review.createdAt}}</view>
+      </view>
+      <view wx:else class="review-form">
+        <view class="review-stars">
+          <text wx:for="{{ratingOptions}}" wx:key="*this" data-rating="{{item}}" bindtap="setReviewRating" class="{{item <= reviewDraft.rating ? 'star active' : 'star'}}">★</text>
+        </view>
+        <textarea class="review-input" maxlength="120" value="{{reviewDraft.content}}" bindinput="onReviewInput" placeholder="说说这次用餐体验" />
+        <button class="review-submit" bindtap="submitReview">提交评价</button>
+      </view>
+    </view>
+
+    <view wx:if="{{order.canPay || order.canCancel || order.canComplete || order.canReorder || order.canReview}}" class="bottom-actions">
       <button wx:if="{{order.canPay}}" class="track-btn" bindtap="mockPay">模拟支付</button>
       <button wx:if="{{order.canComplete}}" class="track-btn" bindtap="completeOrder">确认收货</button>
+      <button wx:if="{{order.canReview}}" class="track-btn" bindtap="submitReview">快速好评</button>
       <button wx:if="{{order.canReorder}}" class="track-btn" bindtap="reorder">再来一单</button>
       <button wx:if="{{order.canCancel}}" class="contact-btn" bindtap="cancelOrder">取消订单</button>
     </view>

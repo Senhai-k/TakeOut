@@ -1,11 +1,17 @@
 const orderService = require('../../services/order')
 const cartService = require('../../services/cart')
+const reviewService = require('../../services/review')
 const { money, orderStatusText } = require('../../utils/format')
 
 Page({
   data: {
     order: null,
-    orderId: null
+    orderId: null,
+    ratingOptions: [1, 2, 3, 4, 5],
+    reviewDraft: {
+      rating: 5,
+      content: ''
+    }
   },
 
   async onLoad(options) {
@@ -27,9 +33,11 @@ Page({
       this.setData({ order: null })
       return
     }
+    const review = order.review || reviewService.getReview(order.id)
     this.setData({
       order: {
         ...order,
+        review,
         displayNo: order.orderNo || `#${order.id}`,
         statusText: orderStatusText(order.orderStatus),
         etaTitle: this.getEtaTitle(order.orderStatus),
@@ -42,6 +50,7 @@ Page({
         canCancel: order.orderStatus < 50 && order.orderStatus !== 70,
         canComplete: order.orderStatus === 50,
         canReorder: order.orderStatus >= 60 || order.orderStatus === 70,
+        canReview: order.orderStatus === 60 && !review,
         items: order.items.map(item => ({
           ...item,
           initial: item.dishName ? item.dishName.substr(0, 1) : '餐',
@@ -113,6 +122,39 @@ Page({
     cartService.saveCartItems(items)
     wx.navigateTo({
       url: `/pages/order-confirm/order-confirm`
+    })
+  },
+
+  setReviewRating(event) {
+    this.setData({
+      'reviewDraft.rating': Number(event.currentTarget.dataset.rating)
+    })
+  },
+
+  onReviewInput(event) {
+    this.setData({
+      'reviewDraft.content': event.detail.value
+    })
+  },
+
+  submitReview() {
+    const order = this.data.order
+    if (!order || !order.canReview) return
+    const review = reviewService.saveReview({
+      orderId: order.id,
+      rating: this.data.reviewDraft.rating,
+      content: this.data.reviewDraft.content
+    })
+    this.setData({
+      'reviewDraft.content': ''
+    })
+    this.setOrder({
+      ...order,
+      review
+    })
+    wx.showToast({
+      title: '评价成功',
+      icon: 'success'
     })
   },
 
