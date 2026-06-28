@@ -1,6 +1,7 @@
 const app = getApp()
 const authService = require('../../services/auth')
 const favoriteService = require('../../services/favorite')
+const paymentService = require('../../services/payment')
 const profileService = require('../../services/profile')
 
 Page({
@@ -8,13 +9,16 @@ Page({
     baseUrl: '',
     user: null,
     favoriteCount: 0,
+    paymentMethod: paymentService.getPaymentMethod(),
+    paymentSheetVisible: false,
+    paymentMethods: paymentService.getPaymentMethods(),
     loggingIn: false,
     profileStats: profileService.getProfileStats(null),
     menus: [
       { icon: '⏱', title: '订单历史', action: 'goOrders' },
       { icon: '🏪', title: '商家订单', action: 'goMerchantOrders' },
       { icon: '♡', title: '收藏商家', action: 'goFavorites' },
-      { icon: '▣', title: '支付方式', action: '' },
+      { icon: '▣', title: '支付方式', action: 'openPaymentSheet' },
       { icon: '⌖', title: '收货地址', action: 'goAddresses' },
       { icon: '⚙', title: '设置', action: '' }
     ]
@@ -26,6 +30,7 @@ Page({
       baseUrl: app.globalData.baseUrl,
       user,
       favoriteCount: favoriteService.listFavorites().length,
+      paymentMethod: paymentService.getPaymentMethod(),
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -36,6 +41,7 @@ Page({
     this.setData({
       user,
       favoriteCount: favoriteService.listFavorites().length,
+      paymentMethod: paymentService.getPaymentMethod(),
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -70,6 +76,26 @@ Page({
     }
     wx.navigateTo({
       url: `/pages/merchant-menu/merchant-menu?id=${favorites[0].id}`
+    })
+  },
+
+  openPaymentSheet() {
+    this.setData({ paymentSheetVisible: true })
+  },
+
+  closePaymentSheet() {
+    this.setData({ paymentSheetVisible: false })
+  },
+
+  choosePaymentMethod(event) {
+    const paymentMethod = paymentService.setPaymentMethod(event.currentTarget.dataset.key)
+    this.setData({
+      paymentMethod,
+      paymentSheetVisible: false
+    })
+    wx.showToast({
+      title: '已切换支付方式',
+      icon: 'none'
     })
   },
 
@@ -129,6 +155,10 @@ Page({
     }
     if (action === 'goFavorites') {
       this.goFavorites()
+      return
+    }
+    if (action === 'openPaymentSheet') {
+      this.openPaymentSheet()
       return
     }
     wx.showToast({

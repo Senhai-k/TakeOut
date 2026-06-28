@@ -23,11 +23,24 @@
       <view class="menu-icon">{{item.icon}}</view>
       <view class="menu-title">{{item.title}}</view>
       <view wx:if="{{item.action === 'goFavorites' && favoriteCount > 0}}" class="menu-extra">{{favoriteCount}}</view>
+      <view wx:if="{{item.action === 'openPaymentSheet'}}" class="menu-sub">{{paymentMethod.name}}</view>
       <view class="chevron">›</view>
     </view>
   </view>
 
   <button wx:if="{{user}}" class="logout" bindtap="logout">退出登录</button>
+
+  <view wx:if="{{paymentSheetVisible}}" class="sheet-mask" bindtap="closePaymentSheet"></view>
+  <view wx:if="{{paymentSheetVisible}}" class="payment-sheet">
+    <view class="sheet-title">支付方式</view>
+    <view wx:for="{{paymentMethods}}" wx:key="key" class="payment-option" bindtap="choosePaymentMethod" data-key="{{item.key}}">
+      <view>
+        <view class="payment-name">{{item.name}}</view>
+        <view class="payment-desc">{{item.desc}}</view>
+      </view>
+      <view class="{{item.key === paymentMethod.key ? 'payment-check active' : 'payment-check'}}">✓</view>
+    </view>
+  </view>
 
   <view class="dev-text">接口地址：{{baseUrl}}</view>
 </view>

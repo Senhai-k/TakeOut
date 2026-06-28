@@ -167,10 +167,85 @@
   font-weight: 900;
 }
 
+.menu-sub {
+  max-width: 168rpx;
+  color: #8a8f98;
+  font-size: 23rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chevron {
   color: #b3b8c1;
   font-size: 40rpx;
   line-height: 40rpx;
+}
+
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.28);
+  z-index: 20;
+}
+
+.payment-sheet {
+  position: fixed;
+  left: 20rpx;
+  right: 20rpx;
+  bottom: calc(20rpx + env(safe-area-inset-bottom));
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  z-index: 30;
+  box-shadow: 0 -10rpx 34rpx rgba(30, 34, 40, 0.16);
+}
+
+.sheet-title {
+  margin-bottom: 16rpx;
+  color: #20242a;
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.payment-option {
+  min-height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1rpx solid #f0f1f4;
+}
+
+.payment-name {
+  color: #20242a;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.payment-desc {
+  margin-top: 6rpx;
+  color: #8a8f98;
+  font-size: 23rpx;
+}
+
+.payment-check {
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background: #e9ebef;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.payment-check.active {
+  background: #ff6a00;
 }
 
 .logout {
