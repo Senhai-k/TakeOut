@@ -2,7 +2,9 @@ package com.takeout.controller.app;
 
 import com.takeout.common.ApiResponse;
 import com.takeout.dto.app.AuthLoginResponse;
+import com.takeout.dto.app.ProfileStatsResponse;
 import com.takeout.service.AppAuthService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,5 +22,10 @@ public class AppAuthController {
     @PostMapping("/login")
     public ApiResponse<AuthLoginResponse> login() {
         return ApiResponse.success(appAuthService.loginDefaultUser());
+    }
+
+    @GetMapping("/profile-stats")
+    public ApiResponse<ProfileStatsResponse> profileStats() {
+        return ApiResponse.success(appAuthService.getDefaultUserStats());
     }
 }

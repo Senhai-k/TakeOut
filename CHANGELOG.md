@@ -11,12 +11,13 @@
 - Spring Boot 后端：REST API、统一响应、参数校验、异常处理、JWT 认证、JPA 持久化。
 - 数据存储：默认 H2 文件库，提供 MySQL profile 和初始化脚本参考。
 - 订单流程：下单、模拟支付、商家接单/拒单、制作、配送、用户确认完成。
+- 个人中心：后端提供用户订单数、累计消费和奖励积分统计接口，小程序优先读取接口数据。
 - 上传限制：图片类型和大小校验，默认支持 jpg、jpeg、png、webp、gif，最大 2MB。
 - 自动化检查：GitHub Actions 运行后端测试、管理后台构建和小程序 JS 语法检查。
 
 ### 验证
 
-- `mvn test`：25 个测试通过。
+- `mvn test`：26 个测试通过。
 - `npm run build`：通过。
 - 小程序 JS 语法检查：通过。
 - GitHub Actions CI：通过。

@@ -19,7 +19,7 @@
 
 ## 验证结果
 
-- 后端测试：`mvn test`，25 个测试通过。
+- 后端测试：`mvn test`，26 个测试通过。
 - 管理后台构建：`npm run build` 通过。
 - 小程序 JS 语法检查通过。
 - GitHub Actions CI 通过。

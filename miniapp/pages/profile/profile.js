@@ -1,24 +1,13 @@
 const app = getApp()
 const authService = require('../../services/auth')
-
-const EMPTY_STATS = [
-  { label: '累计订单', value: '0' },
-  { label: '累计消费', value: '0' },
-  { label: '奖励积分', value: '0' }
-]
-
-const USER_STATS = [
-  { label: '累计订单', value: '45' },
-  { label: '累计消费', value: '567' },
-  { label: '奖励积分', value: '1230' }
-]
+const profileService = require('../../services/profile')
 
 Page({
   data: {
     baseUrl: '',
     user: null,
     loggingIn: false,
-    profileStats: EMPTY_STATS,
+    profileStats: profileService.getProfileStats(null),
     menus: [
       { icon: '⏱', title: '订单历史', action: 'goOrders' },
       { icon: '🏪', title: '商家订单', action: 'goMerchantOrders' },
@@ -36,6 +25,7 @@ Page({
       user,
       profileStats: this.buildStats(user)
     })
+    this.refreshProfileStats(user)
   },
 
   onShow() {
@@ -44,6 +34,7 @@ Page({
       user,
       profileStats: this.buildStats(user)
     })
+    this.refreshProfileStats(user)
   },
 
   goOrders() {
@@ -75,6 +66,7 @@ Page({
         user,
         profileStats: this.buildStats(user)
       })
+      await this.refreshProfileStats(user)
       wx.showToast({
         title: '登录成功',
         icon: 'success'
@@ -124,6 +116,13 @@ Page({
   },
 
   buildStats(user) {
-    return user ? USER_STATS : EMPTY_STATS
+    return profileService.getProfileStats(user)
+  },
+
+  async refreshProfileStats(user) {
+    const profileStats = await profileService.loadProfileStats(user)
+    if (this.data.user === user) {
+      this.setData({ profileStats })
+    }
   }
 })

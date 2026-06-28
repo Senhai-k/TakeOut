@@ -162,6 +162,22 @@ POST /api/app/users/bind-phone
 }
 ```
 
+### 2.4 个人中心统计
+
+```text
+GET /api/app/auth/profile-stats
+```
+
+响应数据：
+
+```json
+{
+  "orderCount": 5,
+  "totalSpent": 128.00,
+  "rewardPoints": 256
+}
+```
+
 ## 3. 地址接口
 
 ### 3.1 地址列表

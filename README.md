@@ -10,6 +10,7 @@
 - Vue 3 管理后台：经营概览、订单处理、分类管理、菜品管理、图片上传。
 - Spring Boot 后端：REST API、统一响应、参数校验、异常处理、JPA 持久化、H2 文件库。
 - 登录与认证：用户端默认登录，后台使用 BCrypt + JWT 保护管理接口。
+- 个人中心：登录后从后端读取订单数、累计消费和奖励积分统计，离线时保留本地 fallback。
 - 基础数据：后台可一键恢复店铺、菜品、地址和 5 笔不同状态订单。
 - 订单闭环：创建订单、模拟支付、商家接单/拒单、配送状态更新、用户确认完成。
 - 离线兜底：后端不可用时，小程序保留本地 mock/fallback 能力。
@@ -151,7 +152,7 @@ Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object 
 
 最近一次本地检查结果：
 
-- `mvn test`：通过，25 个测试成功。
+- `mvn test`：通过，26 个测试成功。
 - `npm run build`：通过。
 - 小程序 JS 语法检查：通过。
 - GitHub Actions CI：通过。

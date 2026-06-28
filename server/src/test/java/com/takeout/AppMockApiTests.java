@@ -49,6 +49,26 @@ class AppMockApiTests extends BaseIntegrationTest {
     }
 
     @Test
+    void profileStatsReturnsUserOrderSummary() throws Exception {
+        Long orderId = createPaidOrder();
+
+        mockMvc.perform(post("/api/merchant/orders/{id}/accept", orderId)
+                        .header("Authorization", bearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+        updateMerchantOrderStatus(orderId, 40);
+        updateMerchantOrderStatus(orderId, 50);
+        updateMerchantOrderStatus(orderId, 60);
+
+        mockMvc.perform(get("/api/app/auth/profile-stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.orderCount").isNumber())
+                .andExpect(jsonPath("$.data.totalSpent").isNumber())
+                .andExpect(jsonPath("$.data.rewardPoints").isNumber());
+    }
+
+    @Test
     void listDishesReturnsSuccess() throws Exception {
         mockMvc.perform(get("/api/app/dishes"))
                 .andExpect(status().isOk())
