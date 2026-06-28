@@ -11,6 +11,30 @@ function authHeader() {
   }
 }
 
+function handleUnauthorized() {
+  window.localStorage.removeItem(SESSION_KEY)
+  window.dispatchEvent(new Event('takeout-admin-unauthorized'))
+}
+
+async function parseApiResponse(response, fallbackMessage) {
+  let json
+  try {
+    json = await response.json()
+  } catch (error) {
+    throw new Error(fallbackMessage)
+  }
+  if (!response.ok) {
+    throw new Error(json.message || fallbackMessage)
+  }
+  if (json.code !== 0) {
+    if (json.code === 40100) {
+      handleUnauthorized()
+    }
+    throw new Error(json.message || fallbackMessage)
+  }
+  return json.data
+}
+
 async function request(path, options = {}) {
   const isLoginRequest = path === '/admin/auth/login'
   const response = await fetch(`${baseUrl}${path}`, {
@@ -22,15 +46,7 @@ async function request(path, options = {}) {
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   })
-  const json = await response.json()
-  if (json.code !== 0) {
-    if (json.code === 40100) {
-      window.localStorage.removeItem(SESSION_KEY)
-      window.dispatchEvent(new Event('takeout-admin-unauthorized'))
-    }
-    throw new Error(json.message || '请求失败')
-  }
-  return json.data
+  return parseApiResponse(response, '请求失败')
 }
 
 async function uploadImage(file) {
@@ -43,15 +59,7 @@ async function uploadImage(file) {
     },
     body: formData
   })
-  const json = await response.json()
-  if (json.code !== 0) {
-    if (json.code === 40100) {
-      window.localStorage.removeItem(SESSION_KEY)
-      window.dispatchEvent(new Event('takeout-admin-unauthorized'))
-    }
-    throw new Error(json.message || '上传失败')
-  }
-  return json.data
+  return parseApiResponse(response, '上传失败')
 }
 
 const getOverview = () => request('/merchant/statistics/overview')

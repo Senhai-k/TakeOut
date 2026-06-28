@@ -23,7 +23,7 @@ Page({
     this.setData({
       baseUrl: app.globalData.baseUrl,
       user,
-      profileStats: this.buildStats(user)
+      profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
   },
@@ -32,7 +32,7 @@ Page({
     const user = authService.getStoredUser()
     this.setData({
       user,
-      profileStats: this.buildStats(user)
+      profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
   },
@@ -64,7 +64,7 @@ Page({
       const user = await authService.loginDefaultUser()
       this.setData({
         user,
-        profileStats: this.buildStats(user)
+        profileStats: this.buildStats()
       })
       await this.refreshProfileStats(user)
       wx.showToast({
@@ -80,7 +80,7 @@ Page({
     authService.clearUser()
     this.setData({
       user: null,
-      profileStats: this.buildStats(null)
+      profileStats: this.buildStats()
     })
     wx.showToast({
       title: '已退出登录',
@@ -115,8 +115,8 @@ Page({
     })
   },
 
-  buildStats(user) {
-    return profileService.getProfileStats(user)
+  buildStats() {
+    return profileService.getProfileStats()
   },
 
   async refreshProfileStats(user) {

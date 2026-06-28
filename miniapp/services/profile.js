@@ -6,17 +6,8 @@ const EMPTY_STATS = [
   { label: '奖励积分', value: '0' }
 ]
 
-const FALLBACK_STATS = [
-  { label: '累计订单', value: '45' },
-  { label: '累计消费', value: '567' },
-  { label: '奖励积分', value: '1230' }
-]
-
-function getProfileStats(user) {
-  if (!user) {
-    return EMPTY_STATS
-  }
-  return FALLBACK_STATS
+function getProfileStats() {
+  return EMPTY_STATS
 }
 
 async function loadProfileStats(user) {
@@ -29,7 +20,7 @@ async function loadProfileStats(user) {
     })
     return formatStats(stats)
   } catch (error) {
-    return FALLBACK_STATS
+    return EMPTY_STATS
   }
 }
 
