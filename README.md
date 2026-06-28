@@ -1,5 +1,7 @@
 # TakeOut
 
+[![CI](https://github.com/Senhai-k/TakeOut/actions/workflows/ci.yml/badge.svg)](https://github.com/Senhai-k/TakeOut/actions/workflows/ci.yml)
+
 一个外卖点餐系统，包含用户端微信小程序、商家管理后台和 Spring Boot 后端服务。项目覆盖点餐、购物车、地址、下单、模拟支付、订单流转、商家接单、分类菜品管理和经营概览等核心流程。
 
 ## 项目亮点
