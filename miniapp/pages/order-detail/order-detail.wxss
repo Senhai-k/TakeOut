@@ -351,6 +351,12 @@
   font-weight: 900;
 }
 
+.payment-method-row {
+  margin-top: 6rpx;
+  color: #20242a;
+  font-weight: 800;
+}
+
 .info-row {
   min-height: 56rpx;
   display: flex;

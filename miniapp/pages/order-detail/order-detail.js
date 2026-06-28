@@ -46,6 +46,7 @@ Page({
         goodsAmountText: money(order.goodsAmount),
         deliveryFeeText: money(order.deliveryFee),
         payAmountText: money(order.payAmount),
+        paymentMethodName: order.paymentMethod ? order.paymentMethod.name : '模拟支付',
         canPay: order.orderStatus === 10,
         canCancel: order.orderStatus < 50 && order.orderStatus !== 70,
         canComplete: order.orderStatus === 50,
@@ -66,7 +67,7 @@ Page({
     try {
       const order = await orderService.mockPayOrder(this.data.order.id)
       this.setOrder(order)
-      wx.showToast({ title: '支付成功', icon: 'success' })
+      wx.showToast({ title: `${this.data.order.paymentMethodName}成功`, icon: 'success' })
     } catch (error) {
       wx.showToast({ title: error.message || '支付失败', icon: 'none' })
     }

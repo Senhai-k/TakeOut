@@ -1,6 +1,7 @@
 const cartService = require('../../services/cart')
 const addressService = require('../../services/address')
 const orderService = require('../../services/order')
+const paymentService = require('../../services/payment')
 const shopService = require('../../services/shop')
 const { money } = require('../../utils/format')
 
@@ -19,6 +20,7 @@ Page({
     minOrderGap: 0,
     canSubmit: false,
     submitting: false,
+    paymentMethod: paymentService.getPaymentMethod(),
     goodsAmountText: '0.00',
     minOrderGapText: '0.00',
     deliveryFeeText: '0.00',
@@ -53,6 +55,7 @@ Page({
     const minOrderAmount = cartService.getMinOrderAmount(cartShop.minOrderAmount ? cartShop : shop)
     const minOrderGap = Math.max(minOrderAmount - goodsAmount, 0)
     const address = await addressService.getDefaultAddress()
+    const paymentMethod = paymentService.getPaymentMethod()
 
     this.setData({
       shop: {
@@ -69,6 +72,7 @@ Page({
       minOrderAmount,
       minOrderGap,
       canSubmit: items.length > 0 && minOrderGap <= 0 && !!address,
+      paymentMethod,
       goodsAmountText: money(goodsAmount),
       minOrderGapText: money(minOrderGap),
       deliveryFeeText: money(deliveryFee),
@@ -121,7 +125,8 @@ Page({
         remark: this.data.remark,
         goodsAmount: this.data.goodsAmount,
         deliveryFee: this.data.deliveryFee,
-        payAmount: this.data.payAmount
+        payAmount: this.data.payAmount,
+        paymentMethod: this.data.paymentMethod
       })
       cartService.clearCart()
       wx.redirectTo({

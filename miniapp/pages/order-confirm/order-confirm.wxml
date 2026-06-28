@@ -43,6 +43,14 @@
     <input class="remark-input" placeholder="口味、餐具等要求" value="{{remark}}" bindinput="onRemarkInput" />
   </view>
 
+  <view class="payment-panel">
+    <view>
+      <view class="row-title">支付方式</view>
+      <view class="payment-desc">{{paymentMethod.desc}}</view>
+    </view>
+    <view class="payment-name">{{paymentMethod.name}}</view>
+  </view>
+
   <view class="amount-panel">
     <view class="amount-row">
       <text>商品金额</text>
