@@ -107,6 +107,7 @@ Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object 
 
 ## 发布前检查
 
+- GitHub Actions CI 通过。
 - 不上传 `server/target/`。
 - 不上传 `admin-web/dist/`。
 - 不上传 `admin-web/node_modules/`。

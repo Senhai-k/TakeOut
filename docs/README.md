@@ -9,3 +9,4 @@
 - `architecture.md`：系统架构和模块边界
 - `order-flow.md`：订单状态和流转规则
 - `checklist.md`：运行和发布前检查清单
+- `release-v0.1.0.md`：v0.1.0 版本说明

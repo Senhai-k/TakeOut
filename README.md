@@ -45,6 +45,7 @@
 - [运行检查清单](docs/checklist.md)：本地运行和发布前检查项。
 - [接口文档](docs/api.md)：用户端和商家端 API。
 - [数据库设计](docs/database.md)：核心表结构和数据模型。
+- [版本记录](CHANGELOG.md)：版本变更和验证结果。
 
 ## 本地运行
 
@@ -141,11 +142,19 @@ cd D:\Projects\Codex\TakeOut\admin-web
 npm run build
 ```
 
+小程序 JS 语法检查：
+
+```powershell
+cd D:\Projects\Codex\TakeOut
+Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object { node --check $_.FullName }
+```
+
 最近一次本地检查结果：
 
-- `mvn test`：通过，23 个测试成功。
+- `mvn test`：通过，25 个测试成功。
 - `npm run build`：通过。
 - 小程序 JS 语法检查：通过。
+- GitHub Actions CI：通过。
 
 ## 说明
 
