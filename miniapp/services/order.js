@@ -1,46 +1,7 @@
 const { request } = require('./request')
-const storage = require('../utils/storage')
 const { nowText } = require('../utils/format')
 const addressService = require('./address')
-const paymentService = require('./payment')
-
-const ORDER_KEY = 'TAKEOUT_ORDERS'
-
-function listLocalOrders() {
-  return storage.get(ORDER_KEY, [])
-}
-
-function saveLocalOrder(order) {
-  const orders = listLocalOrders().filter(item => item.id !== order.id)
-  orders.unshift(order)
-  storage.set(ORDER_KEY, orders)
-}
-
-function findLocalOrder(id) {
-  return listLocalOrders().find(item => Number(item.id) === Number(id)) || null
-}
-
-function mergeLocalMetadata(order) {
-  const local = findLocalOrder(order.id)
-  if (!local) return order
-  return {
-    ...order,
-    paymentMethod: order.paymentMethod || local.paymentMethod
-  }
-}
-
-function updateLocalOrder(id, patch) {
-  const orderId = Number(id)
-  const orders = listLocalOrders()
-  const target = orders.find(item => Number(item.id) === orderId)
-  if (!target) return null
-  const next = {
-    ...target,
-    ...patch
-  }
-  storage.set(ORDER_KEY, orders.map(item => Number(item.id) === orderId ? next : item))
-  return next
-}
+const orderStore = require('./order-store')
 
 async function createOrder(payload) {
   let backendResult = null
@@ -88,10 +49,10 @@ async function createOrder(payload) {
 
   if (backendOrder) {
     const order = {
-      ...normalizeBackendOrder(backendOrder),
-      paymentMethod: normalizePaymentMethod(payload.paymentMethod)
+      ...orderStore.normalizeBackendOrder(backendOrder),
+      paymentMethod: orderStore.normalizePaymentMethod(payload.paymentMethod)
     }
-    saveLocalOrder(order)
+    orderStore.saveLocalOrder(order)
     return order
   }
 
@@ -110,24 +71,24 @@ async function createOrder(payload) {
     deliveryFee: payload.deliveryFee,
     discountAmount: 0,
     payAmount: payload.payAmount,
-    paymentMethod: normalizePaymentMethod(payload.paymentMethod),
+    paymentMethod: orderStore.normalizePaymentMethod(payload.paymentMethod),
     payStatus: 0,
     orderStatus: 10,
     items: payload.items,
     createdAt: nowText()
   }
-  saveLocalOrder(order)
+  orderStore.saveLocalOrder(order)
   return order
 }
 
 async function listOrders() {
   try {
     const page = await request({ url: '/app/orders' })
-    const backendOrders = (page.records || []).map(order => mergeLocalMetadata(normalizeBackendOrder(order)))
-    backendOrders.forEach(saveLocalOrder)
-    return mergeOrders(backendOrders, listLocalOrders())
+    const backendOrders = (page.records || []).map(order => orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(order)))
+    backendOrders.forEach(orderStore.saveLocalOrder)
+    return orderStore.mergeOrders(backendOrders, orderStore.listLocalOrders())
   } catch (error) {
-    return listLocalOrders()
+    return orderStore.listLocalOrders()
   }
 }
 
@@ -139,24 +100,24 @@ async function listOrdersByStatus(status) {
 
 async function getOrderDetail(id) {
   try {
-    const order = mergeLocalMetadata(normalizeBackendOrder(await request({ url: `/app/orders/${id}` })))
-    saveLocalOrder(order)
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({ url: `/app/orders/${id}` })))
+    orderStore.saveLocalOrder(order)
     return order
   } catch (error) {
-    return findLocalOrder(id)
+    return orderStore.findLocalOrder(id)
   }
 }
 
 async function mockPayOrder(id) {
   try {
-    const order = mergeLocalMetadata(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/app/orders/${id}/mock-pay`,
       method: 'POST'
     })))
-    saveLocalOrder(order)
+    orderStore.saveLocalOrder(order)
     return order
   } catch (error) {
-    const localOrder = updateLocalOrder(id, {
+    const localOrder = orderStore.patchLocalOrder(id, {
       payStatus: 1,
       orderStatus: 20
     })
@@ -167,14 +128,14 @@ async function mockPayOrder(id) {
 
 async function cancelOrder(id) {
   try {
-    const order = mergeLocalMetadata(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/app/orders/${id}/cancel`,
       method: 'POST'
     })))
-    saveLocalOrder(order)
+    orderStore.saveLocalOrder(order)
     return order
   } catch (error) {
-    const localOrder = updateLocalOrder(id, {
+    const localOrder = orderStore.patchLocalOrder(id, {
       orderStatus: 70
     })
     if (localOrder) return localOrder
@@ -184,14 +145,14 @@ async function cancelOrder(id) {
 
 async function completeOrder(id) {
   try {
-    const order = mergeLocalMetadata(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/app/orders/${id}/complete`,
       method: 'POST'
     })))
-    saveLocalOrder(order)
+    orderStore.saveLocalOrder(order)
     return order
   } catch (error) {
-    const localOrder = updateLocalOrder(id, {
+    const localOrder = orderStore.patchLocalOrder(id, {
       orderStatus: 60
     })
     if (localOrder) return localOrder
@@ -199,45 +160,9 @@ async function completeOrder(id) {
   }
 }
 
-function normalizeBackendOrder(order) {
-  return {
-    ...order,
-    items: (order.items || []).map(item => ({
-      ...item,
-      cartKey: `${item.dishId}`,
-      optionText: [item.size, item.spice, item.notes].filter(Boolean).join(' / ')
-    })),
-    createdAt: typeof order.createdAt === 'string' ? order.createdAt.replace('T', ' ').slice(0, 16) : nowText()
-  }
-}
-
-function mergeOrders(primaryOrders, secondaryOrders) {
-  const merged = []
-  const seen = new Set()
-  primaryOrders.concat(secondaryOrders).forEach(order => {
-    const key = order.orderNo || `id:${order.id}`
-    if (seen.has(key)) return
-    seen.add(key)
-    merged.push(order)
-  })
-  return merged.sort((left, right) => timestampOf(right.createdAt) - timestampOf(left.createdAt))
-}
-
-function timestampOf(value) {
-  if (!value) return 0
-  const normalized = String(value).replace(' ', 'T')
-  const timestamp = new Date(normalized).getTime()
-  return Number.isFinite(timestamp) ? timestamp : 0
-}
-
-function normalizePaymentMethod(method) {
-  const key = method && method.key
-  return paymentService.getPaymentMethods().find(item => item.key === key) || paymentService.getPaymentMethod()
-}
-
 module.exports = {
   createOrder,
-  listLocalOrders,
+  listLocalOrders: orderStore.listLocalOrders,
   listOrders,
   listOrdersByStatus,
   getOrderDetail,

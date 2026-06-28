@@ -1,45 +1,11 @@
 const { request } = require('./request')
-const storage = require('../utils/storage')
-const { nowText } = require('../utils/format')
-
-const ORDER_KEY = 'TAKEOUT_ORDERS'
-
-function listLocalOrders() {
-  return storage.get(ORDER_KEY, [])
-}
-
-function saveLocalOrders(orders) {
-  storage.set(ORDER_KEY, orders)
-}
-
-function patchLocalOrder(id, patch) {
-  const orderId = Number(id)
-  const orders = listLocalOrders()
-  const nextOrders = orders.map(item => (
-    Number(item.id) === orderId
-      ? { ...item, ...patch, updatedAt: nowText() }
-      : item
-  ))
-  saveLocalOrders(nextOrders)
-  return nextOrders.find(item => Number(item.id) === orderId) || null
-}
-
-function normalizeBackendOrder(order) {
-  return {
-    ...order,
-    items: (order.items || []).map(item => ({
-      ...item,
-      cartKey: `${item.dishId}`,
-      optionText: [item.size, item.spice, item.notes].filter(Boolean).join(' / ')
-    }))
-  }
-}
+const orderStore = require('./order-store')
 
 function normalizeOrder(order) {
   return {
     ...order,
     displayNo: order.orderNo || `#${order.id}`,
-    createdAt: typeof order.createdAt === 'string' ? order.createdAt.replace('T', ' ').slice(0, 16) : nowText()
+    createdAt: orderStore.formatTime(order.createdAt)
   }
 }
 
@@ -65,20 +31,24 @@ async function listOrders(params = {}) {
         pageSize: String(params.pageSize || 20)
       })}`
     })
-    return (page.records || []).map(item => normalizeOrder(normalizeBackendOrder(item)))
+    const orders = (page.records || []).map(item => orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(item)))
+    orders.forEach(orderStore.saveLocalOrder)
+    return orders.map(normalizeOrder)
   } catch (error) {
-    return filterOrders(listLocalOrders().map(normalizeOrder), params.status)
+    return filterOrders(orderStore.listLocalOrders().map(normalizeOrder), params.status)
   }
 }
 
 async function acceptOrder(id) {
   try {
-    return normalizeOrder(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/merchant/orders/${id}/accept`,
       method: 'POST'
     })))
+    orderStore.saveLocalOrder(order)
+    return normalizeOrder(order)
   } catch (error) {
-    const next = patchLocalOrder(id, { orderStatus: 30 })
+    const next = orderStore.patchLocalOrder(id, { orderStatus: 30 })
     if (next) return normalizeOrder(next)
     throw error
   }
@@ -86,13 +56,15 @@ async function acceptOrder(id) {
 
 async function rejectOrder(id, reason) {
   try {
-    return normalizeOrder(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/merchant/orders/${id}/reject`,
       method: 'POST',
       data: reason ? { reason } : {}
     })))
+    orderStore.saveLocalOrder(order)
+    return normalizeOrder(order)
   } catch (error) {
-    const next = patchLocalOrder(id, { orderStatus: 70, remark: reason ? `商家拒单：${reason}` : undefined })
+    const next = orderStore.patchLocalOrder(id, { orderStatus: 70, remark: reason ? `商家拒单：${reason}` : undefined })
     if (next) return normalizeOrder(next)
     throw error
   }
@@ -100,13 +72,15 @@ async function rejectOrder(id, reason) {
 
 async function updateOrderStatus(id, status) {
   try {
-    return normalizeOrder(normalizeBackendOrder(await request({
+    const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/merchant/orders/${id}/status`,
       method: 'POST',
       data: { status }
     })))
+    orderStore.saveLocalOrder(order)
+    return normalizeOrder(order)
   } catch (error) {
-    const next = patchLocalOrder(id, { orderStatus: status })
+    const next = orderStore.patchLocalOrder(id, { orderStatus: status })
     if (next) return normalizeOrder(next)
     throw error
   }
