@@ -23,6 +23,10 @@
       <view class="summary-label">商品数</view>
     </view>
     <view class="summary-item">
+      <view class="summary-value">{{summary.reviewedCount}}</view>
+      <view class="summary-label">已评价</view>
+    </view>
+    <view class="summary-item">
       <view class="summary-value">¥{{summary.paidAmountText}}</view>
       <view class="summary-label">已支付</view>
     </view>
@@ -39,7 +43,12 @@
         <view class="shop-name">{{item.shopName}}</view>
         <view class="order-no">{{item.displayNo}}</view>
       </view>
-      <view class="status">{{item.statusText}}</view>
+      <view class="status-wrap">
+        <view class="status">{{item.statusText}}</view>
+        <view wx:if="{{item.reviewStatusText}}" class="review-badge {{item.review ? 'done' : 'pending'}}">
+          {{item.reviewStatusText}}
+        </view>
+      </view>
     </view>
     <view class="order-items">
       <view wx:for="{{item.items}}" wx:key="dishId" wx:for-item="dish" class="dish-line">

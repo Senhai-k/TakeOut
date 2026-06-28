@@ -1,4 +1,5 @@
 const orderService = require('../../services/order')
+const reviewService = require('../../services/review')
 const { money, orderStatusText } = require('../../utils/format')
 
 Page({
@@ -16,6 +17,7 @@ Page({
     summary: {
       orderCount: 0,
       itemCount: 0,
+      reviewedCount: 0,
       paidAmountText: '0.00'
     }
   },
@@ -28,13 +30,18 @@ Page({
     const source = this.data.activeStatus
       ? await orderService.listOrdersByStatus(this.data.activeStatus)
       : await orderService.listOrders()
-    const orders = source.map(item => ({
-      ...item,
-      displayNo: item.orderNo || `#${item.id}`,
-      statusText: orderStatusText(item.orderStatus),
-      payAmountText: money(item.payAmount),
-      itemCount: item.items.reduce((sum, dish) => sum + Number(dish.quantity || 0), 0)
-    }))
+    const orders = source.map(item => {
+      const review = reviewService.getReview(item.id)
+      return {
+        ...item,
+        review,
+        displayNo: item.orderNo || `#${item.id}`,
+        statusText: orderStatusText(item.orderStatus),
+        payAmountText: money(item.payAmount),
+        itemCount: item.items.reduce((sum, dish) => sum + Number(dish.quantity || 0), 0),
+        reviewStatusText: this.getReviewStatusText(item, review)
+      }
+    })
     this.setData({
       orders,
       summary: this.buildSummary(orders)
@@ -56,13 +63,20 @@ Page({
 
   buildSummary(orders) {
     const itemCount = orders.reduce((sum, order) => sum + Number(order.itemCount || 0), 0)
+    const reviewedCount = orders.filter(order => order.review).length
     const paidAmount = orders
       .filter(order => Number(order.payStatus) === 1 && Number(order.orderStatus) !== 70)
       .reduce((sum, order) => sum + Number(order.payAmount || 0), 0)
     return {
       orderCount: orders.length,
       itemCount,
+      reviewedCount,
       paidAmountText: money(paidAmount)
     }
+  },
+
+  getReviewStatusText(order, review) {
+    if (Number(order.orderStatus) !== 60) return ''
+    return review ? '已评价' : '待评价'
   }
 })
