@@ -22,6 +22,7 @@
     <view wx:for="{{menus}}" wx:key="title" class="menu-card" bindtap="handleMenu" data-action="{{item.action}}">
       <view class="menu-icon">{{item.icon}}</view>
       <view class="menu-title">{{item.title}}</view>
+      <view wx:if="{{item.action === 'goFavorites' && favoriteCount > 0}}" class="menu-extra">{{favoriteCount}}</view>
       <view class="chevron">›</view>
     </view>
   </view>

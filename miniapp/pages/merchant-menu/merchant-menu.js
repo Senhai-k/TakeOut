@@ -1,4 +1,5 @@
 const cartService = require('../../services/cart')
+const favoriteService = require('../../services/favorite')
 const menuData = require('../../services/menu-data')
 const shopService = require('../../services/shop')
 const { money } = require('../../utils/format')
@@ -19,7 +20,8 @@ Page({
     cartCount: 0,
     cartTotalText: '0.00',
     deliveryFeeText: '0.00',
-    cartSheetVisible: false
+    cartSheetVisible: false,
+    isFavorite: false
   },
 
   async onLoad(options) {
@@ -50,7 +52,8 @@ Page({
         anchor: this.getCategoryAnchor(name)
       })),
       activeCategory: sortedCategoryNames[0],
-      dishes: shopDishes
+      dishes: shopDishes,
+      isFavorite: favoriteService.isFavorite(shop.id)
     })
     this.refreshDishGroups()
     this.refreshCart()
@@ -98,6 +101,11 @@ Page({
 
   onShow() {
     this.refreshCart()
+    if (this.data.shop.id) {
+      this.setData({
+        isFavorite: favoriteService.isFavorite(this.data.shop.id)
+      })
+    }
   },
 
   onUnload() {
@@ -165,6 +173,15 @@ Page({
   openDish(event) {
     wx.navigateTo({
       url: `/pages/dish-detail/dish-detail?id=${event.currentTarget.dataset.id}`
+    })
+  },
+
+  toggleFavorite() {
+    const isFavorite = favoriteService.toggleFavorite(this.data.shop)
+    this.setData({ isFavorite })
+    wx.showToast({
+      title: isFavorite ? '已收藏' : '已取消收藏',
+      icon: 'none'
     })
   },
 

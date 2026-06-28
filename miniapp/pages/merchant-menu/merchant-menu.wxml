@@ -4,7 +4,12 @@
       <view>{{shop.icon}}</view>
     </view>
     <view class="shop-info">
-      <view class="shop-name">{{shop.name}}</view>
+      <view class="shop-title-row">
+        <view class="shop-name">{{shop.name}}</view>
+        <view class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
+          {{isFavorite ? '已收藏' : '收藏'}}
+        </view>
+      </view>
       <view class="shop-meta">
         <text>{{shop.rating}} 星</text>
         <text>{{shop.time}}</text>

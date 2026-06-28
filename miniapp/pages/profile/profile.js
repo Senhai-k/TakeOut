@@ -1,17 +1,19 @@
 const app = getApp()
 const authService = require('../../services/auth')
+const favoriteService = require('../../services/favorite')
 const profileService = require('../../services/profile')
 
 Page({
   data: {
     baseUrl: '',
     user: null,
+    favoriteCount: 0,
     loggingIn: false,
     profileStats: profileService.getProfileStats(null),
     menus: [
       { icon: '⏱', title: '订单历史', action: 'goOrders' },
       { icon: '🏪', title: '商家订单', action: 'goMerchantOrders' },
-      { icon: '♡', title: '收藏商家', action: '' },
+      { icon: '♡', title: '收藏商家', action: 'goFavorites' },
       { icon: '▣', title: '支付方式', action: '' },
       { icon: '⌖', title: '收货地址', action: 'goAddresses' },
       { icon: '⚙', title: '设置', action: '' }
@@ -23,6 +25,7 @@ Page({
     this.setData({
       baseUrl: app.globalData.baseUrl,
       user,
+      favoriteCount: favoriteService.listFavorites().length,
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -32,6 +35,7 @@ Page({
     const user = authService.getStoredUser()
     this.setData({
       user,
+      favoriteCount: favoriteService.listFavorites().length,
       profileStats: this.buildStats()
     })
     this.refreshProfileStats(user)
@@ -52,6 +56,20 @@ Page({
   goMerchantOrders() {
     wx.navigateTo({
       url: '/pages/merchant-orders/merchant-orders'
+    })
+  },
+
+  goFavorites() {
+    const favorites = favoriteService.listFavorites()
+    if (favorites.length === 0) {
+      wx.showToast({
+        title: '暂无收藏商家',
+        icon: 'none'
+      })
+      return
+    }
+    wx.navigateTo({
+      url: `/pages/merchant-menu/merchant-menu?id=${favorites[0].id}`
     })
   },
 
@@ -107,6 +125,10 @@ Page({
     }
     if (action === 'goMerchantOrders') {
       this.goMerchantOrders()
+      return
+    }
+    if (action === 'goFavorites') {
+      this.goFavorites()
       return
     }
     wx.showToast({

@@ -153,6 +153,20 @@
   font-weight: 800;
 }
 
+.menu-extra {
+  min-width: 38rpx;
+  height: 38rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  background: #fff1e8;
+  color: #ff6a00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
 .chevron {
   color: #b3b8c1;
   font-size: 40rpx;

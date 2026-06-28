@@ -68,10 +68,39 @@
   padding: 6rpx 0 0 18rpx;
 }
 
+.shop-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
 .shop-name {
+  flex: 1;
+  min-width: 0;
   color: #20242a;
   font-size: 34rpx;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.favorite-btn {
+  height: 48rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: #fff1e8;
+  color: #ff6500;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.favorite-btn.active {
+  background: #ff6500;
+  color: #ffffff;
 }
 
 .shop-meta {
