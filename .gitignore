@@ -4,6 +4,7 @@ target/
 .agents/
 .codex/
 prompts/
+AGENTS.md
 *.iml
 *.log
 *.err.log
