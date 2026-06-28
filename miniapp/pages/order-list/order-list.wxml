@@ -1,0 +1,46 @@
+<view class="order-list-page">
+  <scroll-view class="status-tabs" scroll-x enable-flex>
+    <view class="status-tab-strip">
+      <view
+        wx:for="{{tabs}}"
+        wx:key="status"
+        class="status-tab {{activeStatus === item.status ? 'active' : ''}}"
+        data-status="{{item.status}}"
+        bindtap="selectTab"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{orders.length === 0}}" class="empty-card">
+    <view class="empty-title">暂无订单</view>
+    <view class="empty-desc">去附近商家挑选想吃的菜品</view>
+  </view>
+
+  <view wx:for="{{orders}}" wx:key="id" class="order-card" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="order-head">
+      <view>
+        <view class="shop-name">{{item.shopName}}</view>
+        <view class="order-no">{{item.displayNo}}</view>
+      </view>
+      <view class="status">{{item.statusText}}</view>
+    </view>
+    <view class="order-items">
+      <view wx:for="{{item.items}}" wx:key="dishId" wx:for-item="dish" class="dish-line">
+        <text class="dish-name">{{dish.dishName}}</text>
+        <text>x{{dish.quantity}}</text>
+      </view>
+    </view>
+    <view class="order-foot">
+      <view>
+        <view class="created-at">{{item.createdAt}}</view>
+        <view class="item-summary">共 {{item.itemCount}} 件商品</view>
+      </view>
+      <view class="amount-block">
+        <view class="amount">¥{{item.payAmountText}}</view>
+        <view class="detail-link">查看详情</view>
+      </view>
+    </view>
+  </view>
+</view>

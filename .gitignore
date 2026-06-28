@@ -1,0 +1,35 @@
+target/
+.idea/
+.vscode/
+.agents/
+.codex/
+prompts/
+*.iml
+*.log
+*.err.log
+
+node_modules/
+dist/
+build/
+
+.DS_Store
+Thumbs.db
+
+# Runtime data
+server/data/
+server/uploads/*
+!server/uploads/.gitkeep
+server/*.trace.db
+server/*.mv.db
+server/*-current.log
+server/*-current.err.log
+
+# WeChat developer local config
+project.private.config.json
+miniapp/project.private.config.json
+miniapp/miniprogram_npm/
+
+# Local environment files
+.env
+.env.*
+!.env.example

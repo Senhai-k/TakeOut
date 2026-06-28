@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/search/search",
+    "pages/merchant-menu/merchant-menu",
+    "pages/merchant-orders/merchant-orders",
+    "pages/merchant-order-detail/merchant-order-detail",
+    "pages/cart/cart",
+    "pages/dish-detail/dish-detail",
+    "pages/order-confirm/order-confirm",
+    "pages/order-list/order-list",
+    "pages/order-detail/order-detail",
+    "pages/address-list/address-list",
+    "pages/address-edit/address-edit",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarTitleText": "外卖点餐",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f7f8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#7a7f87",
+    "selectedColor": "#ff6a00",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车"
+      },
+      {
+        "pagePath": "pages/order-list/order-list",
+        "text": "订单"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,98 @@
+<view class="menu-page">
+  <view class="shop-card">
+    <view class="shop-cover {{shop.theme}}">
+      <view>{{shop.icon}}</view>
+    </view>
+    <view class="shop-info">
+      <view class="shop-name">{{shop.name}}</view>
+      <view class="shop-meta">
+        <text>{{shop.rating}} 星</text>
+        <text>{{shop.time}}</text>
+        <text>{{shop.minOrder}}</text>
+      </view>
+      <view class="shop-notice">{{shop.notice}}</view>
+    </view>
+  </view>
+
+  <view class="menu-body">
+    <scroll-view class="category-list" scroll-y>
+      <view
+        wx:for="{{categories}}"
+        wx:key="name"
+        class="category-tab {{activeCategory === item.name ? 'active' : ''}}"
+        bindtap="selectCategory"
+        data-name="{{item.name}}"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <scroll-view
+      class="dish-list"
+      scroll-y
+      scroll-into-view="{{scrollIntoView}}"
+      scroll-with-animation
+      enhanced
+      bounces="{{false}}"
+      bindscroll="onDishScroll"
+    >
+      <view wx:for="{{dishGroups}}" wx:key="name" class="dish-group" id="{{item.anchor}}">
+        <view class="group-title">{{item.name}}</view>
+        <view wx:for="{{item.dishes}}" wx:for-item="dish" wx:key="id" class="dish-card">
+          <view class="dish-image {{dish.theme}}" bindtap="openDish" data-id="{{dish.id}}">
+            <view>{{dish.icon}}</view>
+          </view>
+          <view class="dish-main" bindtap="openDish" data-id="{{dish.id}}">
+            <view class="dish-name">{{dish.name}}</view>
+            <view class="dish-desc">{{dish.desc}}</view>
+            <view class="dish-sales">月售 {{dish.sales}} · 好评 {{dish.rating}}%</view>
+            <view class="dish-price">¥{{dish.priceText}}</view>
+          </view>
+          <view class="add-wrap">
+            <view wx:if="{{dish.cartQuantity > 0}}" class="minus-btn" bindtap="decreaseDish" data-id="{{dish.id}}">-</view>
+            <view wx:if="{{dish.cartQuantity > 0}}" class="dish-count">{{dish.cartQuantity}}</view>
+            <view class="add-btn" bindtap="addDish" data-id="{{dish.id}}">+</view>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{dishGroups.length === 0}}" class="empty-menu">暂无菜品</view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{cartSheetVisible}}" class="sheet-mask" bindtap="closeCartSheet"></view>
+  <view wx:if="{{cartSheetVisible}}" class="cart-sheet">
+    <view class="sheet-head">
+      <view>
+        <view class="sheet-title">已选商品</view>
+        <view class="sheet-subtitle">配送费 ¥{{deliveryFeeText}}</view>
+      </view>
+      <view class="sheet-clear" bindtap="clearCurrentCart">清空</view>
+    </view>
+    <scroll-view class="sheet-list" scroll-y>
+      <view wx:for="{{cartItems}}" wx:key="cartKey" class="sheet-item">
+        <view class="sheet-thumb">{{item.initial}}</view>
+        <view class="sheet-main">
+          <view class="sheet-name">{{item.dishName}}</view>
+          <view wx:if="{{item.optionText}}" class="sheet-option">{{item.optionText}}</view>
+          <view class="sheet-price">¥{{item.subtotalText}}</view>
+        </view>
+        <view class="sheet-stepper">
+          <view class="minus-btn" bindtap="decreaseCartItem" data-key="{{item.cartKey}}">-</view>
+          <view class="dish-count">{{item.quantity}}</view>
+          <view class="add-btn" bindtap="increaseCartItem" data-key="{{item.cartKey}}">+</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="cart-bar {{cartSheetVisible ? 'raised' : ''}}">
+    <view class="cart-left" bindtap="toggleCartSheet">
+      <view class="cart-badge">{{cartCount}}</view>
+      <view class="cart-main">
+        <view class="cart-total">¥{{cartTotalText}}</view>
+        <view class="cart-tip">{{cartCount > 0 ? '商品金额，点开查看明细' : '请选择商品'}}</view>
+      </view>
+    </view>
+    <button class="checkout-btn {{cartCount === 0 ? 'disabled' : ''}}" bindtap="goCheckout">去结算</button>
+  </view>
+</view>

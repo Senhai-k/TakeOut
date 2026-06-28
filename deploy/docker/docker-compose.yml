@@ -1,0 +1,17 @@
+services:
+  takeout-server:
+    build:
+      context: ../../server
+    image: takeout-server:latest
+    container_name: takeout-server
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/app/data/takeout;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    volumes:
+      - takeout-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  takeout-data:

@@ -1,0 +1,74 @@
+<view class="confirm-page">
+  <view class="address-card" bindtap="chooseAddress">
+    <view class="address-pin">⌖</view>
+    <view wx:if="{{address}}" class="address-content">
+      <view class="address-title">{{address.receiverName}} {{address.receiverPhone}}</view>
+      <view class="address-detail">{{address.province}}{{address.city}}{{address.district}}{{address.detail}} {{address.houseNumber}}</view>
+    </view>
+    <view wx:else class="address-empty">请选择收货地址</view>
+    <view class="address-arrow">›</view>
+  </view>
+
+  <view class="delivery-card">
+    <view>
+      <view class="delivery-title">预计 30 分钟送达</view>
+      <view class="delivery-desc">商家接单后立即为你制作</view>
+    </view>
+    <view class="delivery-badge">准时达</view>
+  </view>
+
+  <view class="order-panel">
+    <view class="panel-title">
+      <view>{{shopName}}</view>
+      <view class="item-count">共 {{itemCount}} 件</view>
+    </view>
+    <view wx:if="{{items.length === 0}}" class="empty-order">
+      <view class="empty-title">还没有选择商品</view>
+      <view class="empty-desc">返回店铺菜单，先把想吃的加入购物车</view>
+      <button class="empty-btn" bindtap="goMenu">去点餐</button>
+    </view>
+    <view wx:for="{{items}}" wx:key="cartKey" class="order-item">
+      <view class="item-image">{{item.initial}}</view>
+      <view class="item-main">
+        <view class="item-name">{{item.dishName}}</view>
+        <view wx:if="{{item.optionText}}" class="item-option">{{item.optionText}}</view>
+        <view class="item-quantity">x{{item.quantity}}</view>
+      </view>
+      <view class="item-price">¥{{item.subtotalAmountText}}</view>
+    </view>
+  </view>
+
+  <view class="remark-panel">
+    <view class="row-title">订单备注</view>
+    <input class="remark-input" placeholder="口味、餐具等要求" value="{{remark}}" bindinput="onRemarkInput" />
+  </view>
+
+  <view class="amount-panel">
+    <view class="amount-row">
+      <text>商品金额</text>
+      <text>¥{{goodsAmountText}}</text>
+    </view>
+    <view class="amount-row">
+      <text>配送费</text>
+      <text>¥{{deliveryFeeText}}</text>
+    </view>
+    <view wx:if="{{minOrderGap > 0}}" class="amount-row warning">
+      <text>起送价</text>
+      <text>还差 ¥{{minOrderGapText}}</text>
+    </view>
+    <view class="amount-row total">
+      <text>应付</text>
+      <text>¥{{payAmountText}}</text>
+    </view>
+  </view>
+
+  <view class="submit-bar">
+    <view>
+      <view class="pay-label">应付</view>
+      <view class="pay-amount">¥{{payAmountText}}</view>
+    </view>
+    <button class="submit-btn {{canSubmit && !submitting ? '' : 'disabled'}}" bindtap="submitOrder">
+      {{submitting ? '提交中...' : (canSubmit ? '提交订单' : '暂不可提交')}}
+    </button>
+  </view>
+</view>

@@ -1,0 +1,62 @@
+<view class="home-page">
+  <view class="top-bar">
+    <view>
+      <view class="city-label">当前位置</view>
+      <view class="city">深圳市南山区</view>
+    </view>
+    <view class="status-chip">准时达</view>
+  </view>
+
+  <view class="search-row">
+    <view class="search-box" bindtap="goSearch">
+      <text class="search-icon">⌕</text>
+      <text class="search-placeholder">搜索美食...</text>
+    </view>
+    <view class="scan-icon">⌗</view>
+  </view>
+
+  <view class="promo-band">
+    <view class="promo-main">
+      <view class="promo-title">晚餐高峰精选</view>
+      <view class="promo-desc">热销门店 30 分钟左右送达</view>
+    </view>
+    <view class="promo-badge">满 68 减 8</view>
+  </view>
+
+  <scroll-view class="category-scroll" scroll-x enable-flex>
+    <view class="category-strip">
+      <view wx:for="{{categories}}" wx:key="name" class="category-item" bindtap="goSearchByCategory" data-name="{{item.name}}">
+        <view class="category-icon">{{item.icon}}</view>
+        <view class="category-name">{{item.name}}</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="section-head">
+    <view class="section-title">附近商家</view>
+    <view class="section-more">更多</view>
+  </view>
+
+  <view class="merchant-list">
+    <view wx:for="{{merchants}}" wx:key="id" class="merchant-card" bindtap="goMerchant" data-id="{{item.id}}">
+      <view class="merchant-photo {{item.theme}}">
+        <view class="merchant-mark">{{item.icon}}</view>
+      </view>
+      <view class="merchant-main">
+        <view class="merchant-title-row">
+          <view class="merchant-name">{{item.name}}</view>
+          <view class="rating-pill">{{item.rating}}</view>
+        </view>
+        <view class="merchant-meta">
+          <text>{{item.deliveryFeeText}}</text>
+          <text>{{item.time}}</text>
+          <text>{{item.minOrder}}</text>
+        </view>
+        <view class="merchant-desc">{{item.desc}}</view>
+        <view class="merchant-tags">
+          <text wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

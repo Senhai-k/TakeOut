@@ -1,0 +1,146 @@
+.order-list-page {
+  min-height: 100vh;
+  padding: 18rpx 16rpx 32rpx;
+  background: #f2f3f5;
+}
+
+.status-tabs {
+  margin: 0 -16rpx 16rpx;
+  white-space: nowrap;
+}
+
+.status-tab-strip {
+  padding: 0 16rpx;
+  display: flex;
+  gap: 12rpx;
+}
+
+.status-tab {
+  height: 60rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #68707b;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.status-tab.active {
+  background: #ff6500;
+  color: #ffffff;
+}
+
+.empty-card,
+.order-card {
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(30, 34, 40, 0.045);
+}
+
+.empty-card {
+  padding: 96rpx 32rpx;
+  text-align: center;
+}
+
+.empty-title {
+  color: #20242a;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.empty-desc {
+  margin-top: 10rpx;
+  color: #8a8f98;
+  font-size: 24rpx;
+}
+
+.order-card {
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+}
+
+.order-head,
+.order-foot,
+.dish-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.shop-name {
+  color: #20242a;
+  font-size: 29rpx;
+  font-weight: 900;
+}
+
+.order-no {
+  margin-top: 6rpx;
+  color: #8a8f98;
+  font-size: 22rpx;
+}
+
+.status {
+  height: 44rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  background: #edf8f3;
+  color: #0b8a57;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.order-items {
+  margin: 18rpx 0;
+  padding: 14rpx 0;
+  border-top: 1rpx solid #eef0f3;
+  border-bottom: 1rpx solid #eef0f3;
+}
+
+.dish-line {
+  min-height: 42rpx;
+  color: #60666f;
+  font-size: 25rpx;
+}
+
+.dish-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.created-at,
+.item-summary {
+  color: #8a8f98;
+  font-size: 23rpx;
+}
+
+.item-summary {
+  margin-top: 6rpx;
+}
+
+.amount-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.amount {
+  color: #ff6500;
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.detail-link {
+  margin-top: 8rpx;
+  color: #ff6500;
+  font-size: 23rpx;
+  font-weight: 800;
+}

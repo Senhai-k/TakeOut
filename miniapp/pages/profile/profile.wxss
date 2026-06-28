@@ -1,0 +1,154 @@
+.profile-page {
+  min-height: 100vh;
+  padding: 20rpx;
+  background: #f7f7f8;
+}
+
+.profile-card {
+  min-height: 188rpx;
+  padding: 26rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #ffead8, #ffffff);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10rpx 28rpx rgba(255, 106, 0, 0.1);
+}
+
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #ff6a00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42rpx;
+  font-weight: 900;
+  box-shadow: 0 8rpx 20rpx rgba(30, 34, 40, 0.08);
+}
+
+.user-main {
+  flex: 1;
+  padding-left: 22rpx;
+}
+
+.user-name {
+  margin-bottom: 12rpx;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.badge {
+  width: 156rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background: #ff6a00;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.user-phone {
+  margin-top: 10rpx;
+  color: #8a5a2a;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.login-btn {
+  width: 132rpx;
+  height: 64rpx;
+  margin: 0;
+  border-radius: 999rpx;
+  background: #ff6a00;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.stats {
+  margin: 18rpx 0;
+  padding: 20rpx 0;
+  display: flex;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid #eef0f3;
+}
+
+.stat:last-child {
+  border-right: 0;
+}
+
+.stat-value {
+  color: #20242a;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.stat-label {
+  margin-top: 8rpx;
+  color: #8a8f98;
+  font-size: 22rpx;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.menu-card {
+  min-height: 86rpx;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.menu-icon {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 14rpx;
+  background: #fff1e8;
+  color: #ff6a00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.menu-title {
+  flex: 1;
+  padding-left: 18rpx;
+  font-weight: 800;
+}
+
+.chevron {
+  color: #b3b8c1;
+  font-size: 42rpx;
+}
+
+.logout {
+  height: 80rpx;
+  margin-top: 24rpx;
+  border-radius: 16rpx;
+  background: #e9ebef;
+  color: #68707b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.dev-text {
+  display: none;
+}

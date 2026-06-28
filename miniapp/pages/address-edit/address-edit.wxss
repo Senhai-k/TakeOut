@@ -1,0 +1,52 @@
+.address-edit-page {
+  padding-bottom: 136rpx;
+}
+
+.form-panel {
+  padding: 0 20rpx;
+}
+
+.field {
+  min-height: 96rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eef0f3;
+}
+
+.field:last-child {
+  border-bottom: 0;
+}
+
+.label {
+  margin-bottom: 10rpx;
+  color: #20242a;
+  font-weight: 700;
+}
+
+input {
+  height: 48rpx;
+  color: #20242a;
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hint {
+  color: #7a7f87;
+  font-size: 24rpx;
+}
+
+.save-btn {
+  position: fixed;
+  left: 20rpx;
+  right: 20rpx;
+  bottom: calc(16rpx + env(safe-area-inset-bottom));
+  height: 80rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}

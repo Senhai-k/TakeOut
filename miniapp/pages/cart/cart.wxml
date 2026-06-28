@@ -1,0 +1,68 @@
+<view class="cart-page">
+  <view class="cart-header">
+    <view class="back-arrow" bindtap="goBack">‹</view>
+    <view class="page-title">我的购物车</view>
+  </view>
+
+  <view wx:if="{{items.length > 0}}" class="panel cart-list">
+    <view class="shop-row">
+      <view class="shop-name">{{shopName}}</view>
+      <view class="clear-cart" bindtap="clearCart">清空</view>
+    </view>
+    <view wx:for="{{items}}" wx:key="cartKey" class="cart-item">
+      <view class="thumb">{{item.initial}}</view>
+      <view class="item-main">
+        <view class="item-name">{{item.dishName}}</view>
+        <view wx:if="{{item.optionText}}" class="item-option">{{item.optionText}}</view>
+        <view class="muted">单价 ¥{{item.dishPriceText}}</view>
+      </view>
+      <view class="item-side">
+        <view class="item-price">¥{{item.subtotalText}}</view>
+        <view class="qty-stepper">
+          <view class="step-btn" bindtap="decreaseItem" data-key="{{item.cartKey}}">-</view>
+          <view class="qty-num">{{item.quantity}}</view>
+          <view class="step-btn add" bindtap="increaseItem" data-key="{{item.cartKey}}">+</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="panel cart-empty">
+    <view class="empty-icon">🛒</view>
+    <view class="empty-title">购物车还是空的</view>
+    <view class="empty-desc">去附近商家挑选想吃的菜品</view>
+    <button class="empty-btn" bindtap="goHome">去点餐</button>
+  </view>
+
+  <view wx:if="{{items.length > 0}}" class="panel promo">
+    <input placeholder="优惠码" value="{{promoCode}}" bindinput="onPromoInput" />
+    <button bindtap="applyPromo">兑换</button>
+  </view>
+
+  <view wx:if="{{items.length > 0}}" class="panel summary">
+    <view class="summary-row">
+      <text>小计</text>
+      <text>¥{{subtotalText}}</text>
+    </view>
+    <view wx:if="{{minOrderGap > 0}}" class="summary-row warning">
+      <text>起送价</text>
+      <text>还差 ¥{{minOrderGapText}}</text>
+    </view>
+    <view class="summary-row">
+      <text>配送费</text>
+      <text>¥{{deliveryFeeText}}</text>
+    </view>
+    <view class="summary-row">
+      <text>打包费</text>
+      <text>¥{{taxText}}</text>
+    </view>
+    <view class="summary-row total">
+      <text>总计</text>
+      <text>¥{{totalText}}</text>
+    </view>
+  </view>
+
+  <button wx:if="{{items.length > 0}}" class="checkout {{canCheckout ? '' : 'disabled'}}" bindtap="goCheckout">
+    {{canCheckout ? '去支付' : '未达到起送价'}}
+  </button>
+</view>

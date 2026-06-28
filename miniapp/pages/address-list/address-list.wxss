@@ -1,0 +1,78 @@
+.address-list-page {
+  padding-bottom: 136rpx;
+}
+
+.address-card {
+  min-height: 118rpx;
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.address-main {
+  flex: 1;
+  min-width: 0;
+  padding-right: 18rpx;
+}
+
+.address-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.address-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.default-tag {
+  margin-left: 12rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 6rpx;
+  background: #e9f7ef;
+  color: #188b57;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.address-detail {
+  margin-top: 8rpx;
+  color: #60666f;
+  line-height: 1.5;
+}
+
+.edit-btn,
+.delete-btn {
+  width: 88rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  background: #f0f2f5;
+  color: #60666f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  font-weight: 800;
+}
+
+.delete-btn {
+  background: #fff1e8;
+  color: #ff6500;
+}
+
+.add-btn {
+  position: fixed;
+  left: 20rpx;
+  right: 20rpx;
+  bottom: calc(16rpx + env(safe-area-inset-bottom));
+  height: 80rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}

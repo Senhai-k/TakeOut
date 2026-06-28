@@ -1,0 +1,97 @@
+<view class="tracking-page">
+  <view wx:if="{{order}}">
+    <view class="top-row">
+      <view class="order-title-block">
+        <view class="title">订单 {{order.displayNo}}</view>
+        <view class="status-text">{{order.statusText}}</view>
+      </view>
+      <button class="help-btn">联系客服</button>
+    </view>
+
+    <view class="panel eta-card">
+      <view class="eta">{{order.etaTitle}}</view>
+      <view class="muted">{{order.etaDesc}}</view>
+    </view>
+
+    <view class="panel timeline">
+      <view wx:for="{{steps}}" wx:key="title" class="step {{item.state}}">
+        <view class="step-dot">{{item.state === 'done' ? '✓' : ''}}</view>
+        <view class="step-main">
+          <view class="step-title">{{item.title}}</view>
+          <view class="step-desc">{{item.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel map-card">
+      <view class="map-route"></view>
+      <view class="pin restaurant">R</view>
+      <view class="pin customer">你</view>
+    </view>
+
+    <view class="panel driver-card">
+      <view class="driver-head">
+        <view class="driver-avatar">M</view>
+        <view class="driver-main">
+          <view class="driver-name">张师傅</view>
+          <view class="driver-meta">车牌号 粤B·12345</view>
+        </view>
+        <view class="driver-status">{{order.driverStatus}}</view>
+      </view>
+      <view class="driver-actions">
+        <view class="action-pill">☎ 联系骑手</view>
+        <view class="action-pill">✉ 发送消息</view>
+      </view>
+    </view>
+
+    <view class="panel item-panel">
+      <view class="section-title">{{order.shopName}}</view>
+      <view wx:for="{{order.items}}" wx:key="cartKey" class="detail-item">
+        <view class="item-image">{{item.initial}}</view>
+        <view class="item-main">
+          <view class="detail-name">{{item.dishName}}</view>
+          <view wx:if="{{item.optionText}}" class="muted">{{item.optionText}}</view>
+          <view class="muted">x{{item.quantity}}</view>
+        </view>
+        <view>¥{{item.subtotalAmountText}}</view>
+      </view>
+      <view class="amount-row">
+        <text>商品金额</text>
+        <text>¥{{order.goodsAmountText}}</text>
+      </view>
+      <view class="amount-row">
+        <text>配送费</text>
+        <text>¥{{order.deliveryFeeText}}</text>
+      </view>
+      <view class="amount-row total">
+        <text>合计</text>
+        <text>¥{{order.payAmountText}}</text>
+      </view>
+    </view>
+
+    <view class="panel info-panel">
+      <view class="section-title">配送信息</view>
+      <view class="info-row">
+        <text class="info-label">收货人</text>
+        <text class="info-value">{{order.receiverName}} {{order.receiverPhone}}</text>
+      </view>
+      <view class="info-row address-line">
+        <text class="info-label">收货地址</text>
+        <text class="info-value">{{order.receiverAddress}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">下单时间</text>
+        <text class="info-value">{{order.createdAt}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{order.canPay || order.canCancel || order.canComplete || order.canReorder}}" class="bottom-actions">
+      <button wx:if="{{order.canPay}}" class="track-btn" bindtap="mockPay">模拟支付</button>
+      <button wx:if="{{order.canComplete}}" class="track-btn" bindtap="completeOrder">确认收货</button>
+      <button wx:if="{{order.canReorder}}" class="track-btn" bindtap="reorder">再来一单</button>
+      <button wx:if="{{order.canCancel}}" class="contact-btn" bindtap="cancelOrder">取消订单</button>
+    </view>
+  </view>
+
+  <view wx:else class="panel empty">订单不存在</view>
+</view>

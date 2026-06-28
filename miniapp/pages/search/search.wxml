@@ -1,0 +1,61 @@
+<view class="search-page">
+  <view class="search-box">
+    <text class="search-icon">⌕</text>
+    <input placeholder="搜索美食、商家..." value="{{keyword}}" confirm-type="search" bindinput="onInput" bindconfirm="onSearch" />
+    <button wx:if="{{keyword}}" class="clear-btn" bindtap="clearKeyword">×</button>
+  </view>
+
+  <view wx:if="{{!searched}}" class="section">
+    <view class="section-title">热门搜索</view>
+    <view class="tag-wrap">
+      <view wx:for="{{hotKeywords}}" wx:key="*this" class="hot-tag" bindtap="tapKeyword" data-keyword="{{item}}">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">快捷分类</view>
+    <scroll-view class="filter-scroll" scroll-x enable-flex>
+      <view class="filter-strip">
+        <view
+          wx:for="{{filters}}"
+          wx:key="name"
+          class="filter-item {{activeFilter === item.name ? 'active' : ''}}"
+          bindtap="selectFilter"
+          data-name="{{item.name}}"
+        >
+          <text>{{item.icon}}</text>
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section result-section">
+    <view class="section-title">{{searched ? '搜索结果' : '为你推荐'}}</view>
+
+    <view wx:if="{{results.length === 0}}" class="panel empty">
+      没有找到相关结果
+    </view>
+
+    <view wx:for="{{results}}" wx:key="id" class="panel result-card" bindtap="openResult" data-type="{{item.type}}" data-id="{{item.id}}">
+      <view class="result-thumb {{item.theme}}">
+        <view>{{item.icon}}</view>
+      </view>
+      <view class="result-main">
+        <view class="result-title-row">
+          <view class="result-name">{{item.name}}</view>
+          <view class="type-badge {{item.type}}">{{item.type === 'dish' ? '菜品' : '商家'}}</view>
+        </view>
+        <view class="result-desc">{{item.desc}}</view>
+        <view class="result-meta">
+          <text>{{item.rating}} 星</text>
+          <text>{{item.time}}</text>
+          <text>{{item.price}}</text>
+        </view>
+      </view>
+      <view class="result-action">{{item.type === 'dish' ? '查看' : '进店'}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,51 @@
+<view class="detail-page">
+  <view class="hero">
+    <view class="hero-food">{{dish.icon}}</view>
+    <view class="hero-overlay">
+      <view>{{dish.merchantName}}</view>
+      <view class="rating">{{dish.rating}} ★</view>
+    </view>
+  </view>
+
+  <view class="content">
+    <view class="item-head">
+      <view>
+        <view class="item-name">{{dish.name}}</view>
+        <view class="item-desc">{{dish.description}}</view>
+      </view>
+      <view class="price">¥{{dish.price}}</view>
+    </view>
+
+    <view class="option-section">
+      <view class="option-title">规格</view>
+      <view class="segment">
+        <view class="segment-item {{size === '普通' ? 'active' : ''}}" bindtap="selectSize" data-size="普通">普通</view>
+        <view class="segment-item {{size === '大份' ? 'active' : ''}}" bindtap="selectSize" data-size="大份">大份</view>
+      </view>
+    </view>
+
+    <view class="option-section">
+      <view class="option-title">辣度</view>
+      <radio-group class="radio-row" bindchange="selectSpice">
+        <label wx:for="{{spiceOptions}}" wx:key="value" class="radio-item">
+          <radio value="{{item.value}}" checked="{{spice === item.value}}" color="#ff6a00" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="option-section">
+      <view class="option-title">备注</view>
+      <textarea class="notes" placeholder="口味、餐具、忌口等备注" value="{{notes}}" bindinput="onNotesInput" />
+    </view>
+  </view>
+
+  <view class="add-bar">
+    <view class="qty-box">
+      <button class="qty-btn" bindtap="decrease">-</button>
+      <text>{{quantity}}</text>
+      <button class="qty-btn add" bindtap="increase">+</button>
+    </view>
+    <button class="add-cart" bindtap="addToCart">加入购物车 - ¥{{totalText}}</button>
+  </view>
+</view>
