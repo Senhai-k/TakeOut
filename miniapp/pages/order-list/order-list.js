@@ -12,7 +12,12 @@ Page({
       { label: '已完成', status: 60 }
     ],
     activeStatus: 0,
-    orders: []
+    orders: [],
+    summary: {
+      orderCount: 0,
+      itemCount: 0,
+      paidAmountText: '0.00'
+    }
   },
 
   async onShow() {
@@ -31,7 +36,8 @@ Page({
       itemCount: item.items.reduce((sum, dish) => sum + Number(dish.quantity || 0), 0)
     }))
     this.setData({
-      orders
+      orders,
+      summary: this.buildSummary(orders)
     })
   },
 
@@ -46,5 +52,17 @@ Page({
     wx.navigateTo({
       url: `/pages/order-detail/order-detail?id=${event.currentTarget.dataset.id}`
     })
+  },
+
+  buildSummary(orders) {
+    const itemCount = orders.reduce((sum, order) => sum + Number(order.itemCount || 0), 0)
+    const paidAmount = orders
+      .filter(order => Number(order.payStatus) === 1 && Number(order.orderStatus) !== 70)
+      .reduce((sum, order) => sum + Number(order.payAmount || 0), 0)
+    return {
+      orderCount: orders.length,
+      itemCount,
+      paidAmountText: money(paidAmount)
+    }
   }
 })

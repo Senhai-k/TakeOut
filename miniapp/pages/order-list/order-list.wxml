@@ -13,6 +13,21 @@
     </view>
   </scroll-view>
 
+  <view class="summary-card">
+    <view class="summary-item">
+      <view class="summary-value">{{summary.orderCount}}</view>
+      <view class="summary-label">订单数</view>
+    </view>
+    <view class="summary-item">
+      <view class="summary-value">{{summary.itemCount}}</view>
+      <view class="summary-label">商品数</view>
+    </view>
+    <view class="summary-item">
+      <view class="summary-value">¥{{summary.paidAmountText}}</view>
+      <view class="summary-label">已支付</view>
+    </view>
+  </view>
+
   <view wx:if="{{orders.length === 0}}" class="empty-card">
     <view class="empty-title">暂无订单</view>
     <view class="empty-desc">去附近商家挑选想吃的菜品</view>

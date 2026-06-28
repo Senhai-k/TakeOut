@@ -33,6 +33,39 @@
   color: #ffffff;
 }
 
+.summary-card {
+  min-height: 108rpx;
+  margin-bottom: 16rpx;
+  padding: 18rpx 0;
+  border-radius: 16rpx;
+  background: #ffffff;
+  display: flex;
+  box-shadow: 0 8rpx 22rpx rgba(30, 34, 40, 0.045);
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid #eef0f3;
+}
+
+.summary-item:last-child {
+  border-right: 0;
+}
+
+.summary-value {
+  color: #20242a;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 36rpx;
+}
+
+.summary-label {
+  margin-top: 8rpx;
+  color: #8a8f98;
+  font-size: 22rpx;
+}
+
 .empty-card,
 .order-card {
   border-radius: 16rpx;
