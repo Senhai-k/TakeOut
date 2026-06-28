@@ -42,6 +42,15 @@ Invoke-RestMethod http://127.0.0.1:8080/api/health
 jdbc:h2:file:./data/takeout;MODE=MySQL
 ```
 
+可选 profile：
+
+```powershell
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+`mysql` profile 通过 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 配置连接。
+
 ## 测试
 
 ```powershell

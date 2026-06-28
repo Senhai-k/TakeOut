@@ -116,6 +116,38 @@ class MerchantCatalogApiTests extends BaseIntegrationTest {
     }
 
     @Test
+    void uploadImageRejectsUnsupportedContentType() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "dish.png",
+                MediaType.TEXT_PLAIN_VALUE,
+                new byte[]{1, 2, 3}
+        );
+
+        mockMvc.perform(multipart("/api/merchant/uploads/images")
+                        .file(file)
+                        .header("Authorization", bearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40001));
+    }
+
+    @Test
+    void uploadImageRejectsOversizedFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "large.png",
+                MediaType.IMAGE_PNG_VALUE,
+                new byte[(2 * 1024 * 1024) + 1]
+        );
+
+        mockMvc.perform(multipart("/api/merchant/uploads/images")
+                        .file(file)
+                        .header("Authorization", bearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40001));
+    }
+
+    @Test
     void resetSeedDataReturnsSeedCounts() throws Exception {
         mockMvc.perform(post("/api/merchant/seed/reset")
                         .header("Authorization", bearerToken()))

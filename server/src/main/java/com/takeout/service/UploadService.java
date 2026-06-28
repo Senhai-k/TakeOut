@@ -1,9 +1,9 @@
 package com.takeout.service;
 
 import com.takeout.common.ErrorCode;
+import com.takeout.config.UploadProperties;
 import com.takeout.dto.merchant.UploadResponse;
 import com.takeout.exception.BusinessException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,14 +21,23 @@ public class UploadService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final Path uploadRoot;
+    private final UploadProperties uploadProperties;
 
-    public UploadService(@Value("${takeout.upload-dir:uploads}") String uploadDir) {
-        this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
+    public UploadService(UploadProperties uploadProperties) {
+        this.uploadProperties = uploadProperties;
+        this.uploadRoot = Path.of(uploadProperties.getDir()).toAbsolutePath().normalize();
     }
 
     public UploadResponse uploadImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "请选择要上传的图片");
+        }
+        if (file.getSize() > uploadProperties.getMaxSizeBytes()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "图片大小不能超过 " + maxSizeMb() + "MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !uploadProperties.getAllowedContentTypes().contains(contentType.toLowerCase(Locale.ROOT))) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "图片类型不支持");
         }
         String extension = extensionOf(file.getOriginalFilename());
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
@@ -55,5 +64,9 @@ public class UploadService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "图片文件名缺少后缀");
         }
         return originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+    }
+
+    private long maxSizeMb() {
+        return Math.max(uploadProperties.getMaxSizeBytes() / 1024 / 1024, 1);
     }
 }

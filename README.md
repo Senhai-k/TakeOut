@@ -65,6 +65,15 @@ Invoke-RestMethod http://127.0.0.1:8080/api/health
 http://127.0.0.1:8080/h2-console
 ```
 
+后端也提供 profile 配置：
+
+```powershell
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+`mysql` profile 需要提前创建数据库，并通过环境变量配置连接信息。
+
 ### 2. 启动管理后台
 
 ```powershell
@@ -144,6 +153,7 @@ npm run build
 - 当前用户端使用默认登录；后台已具备 BCrypt 密码校验、JWT 签发和管理接口保护，但还不是完整多角色权限系统。
 - 默认使用 H2 文件库，便于 clone 后直接运行；生产化可迁移到 MySQL。
 - 小程序端保留后端优先、本地 fallback 的策略，避免本地服务未启动时完全不可用。
+- 图片上传当前限制为 jpg、jpeg、png、webp、gif，默认最大 2MB。
 
 ## 后续可扩展
 

@@ -93,6 +93,13 @@ server/data/
 
 `docs/database.md` 和初始化脚本保留了面向 MySQL 的设计说明，后续生产化可以迁移到 MySQL，并补充 Flyway 或 Liquibase 管理数据库版本。
 
+当前配置包含：
+
+- 默认配置：H2 文件库，适合本地快速运行。
+- `test` profile：H2 内存库，供自动化测试使用。
+- `dev` profile：独立 H2 文件库，便于本地开发隔离数据。
+- `mysql` profile：MySQL 连接配置模板，使用环境变量传入连接信息。
+
 ## 认证设计
 
 ### 用户端
@@ -111,7 +118,7 @@ server/data/
 server/uploads/
 ```
 
-后端通过 `/uploads/**` 暴露静态访问路径。正式上线建议迁移到对象存储，并增加文件类型、大小、鉴权和生命周期策略。
+后端通过 `/uploads/**` 暴露静态访问路径。当前仅允许 jpg、jpeg、png、webp、gif，默认最大 2MB。正式上线建议迁移到对象存储，并增加鉴权、生命周期和内容安全策略。
 
 ## 基础数据
 
