@@ -105,9 +105,9 @@ async function createOrder(payload) {
 async function listOrders() {
   try {
     const page = await request({ url: '/app/orders' })
-    const orders = (page.records || []).map(normalizeBackendOrder)
-    orders.forEach(saveLocalOrder)
-    return orders
+    const backendOrders = (page.records || []).map(normalizeBackendOrder)
+    backendOrders.forEach(saveLocalOrder)
+    return mergeOrders(backendOrders, listLocalOrders())
   } catch (error) {
     return listLocalOrders()
   }
@@ -191,6 +191,25 @@ function normalizeBackendOrder(order) {
     })),
     createdAt: typeof order.createdAt === 'string' ? order.createdAt.replace('T', ' ').slice(0, 16) : nowText()
   }
+}
+
+function mergeOrders(primaryOrders, secondaryOrders) {
+  const merged = []
+  const seen = new Set()
+  primaryOrders.concat(secondaryOrders).forEach(order => {
+    const key = order.orderNo || `id:${order.id}`
+    if (seen.has(key)) return
+    seen.add(key)
+    merged.push(order)
+  })
+  return merged.sort((left, right) => timestampOf(right.createdAt) - timestampOf(left.createdAt))
+}
+
+function timestampOf(value) {
+  if (!value) return 0
+  const normalized = String(value).replace(' ', 'T')
+  const timestamp = new Date(normalized).getTime()
+  return Number.isFinite(timestamp) ? timestamp : 0
 }
 
 module.exports = {
