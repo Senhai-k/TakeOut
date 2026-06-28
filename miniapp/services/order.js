@@ -195,6 +195,7 @@ function normalizeBackendOrder(order) {
 
 module.exports = {
   createOrder,
+  listLocalOrders,
   listOrders,
   listOrdersByStatus,
   getOrderDetail,
