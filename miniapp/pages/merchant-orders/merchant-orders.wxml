@@ -47,7 +47,10 @@
         <view class="shop-name">{{item.shopName}}</view>
         <view class="order-no">{{item.displayNo}}</view>
       </view>
-      <view class="status {{item.orderStatus === 20 ? 'waiting' : ''}}">{{item.statusText}}</view>
+      <view class="status-wrap">
+        <view class="status {{item.orderStatus === 20 ? 'waiting' : ''}}">{{item.statusText}}</view>
+        <view wx:if="{{item.hasReview}}" class="review-badge">{{item.reviewSummary}}</view>
+      </view>
     </view>
 
     <view class="customer-line" bindtap="goDetail" data-id="{{item.id}}">

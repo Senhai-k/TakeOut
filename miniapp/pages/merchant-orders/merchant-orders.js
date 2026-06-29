@@ -46,6 +46,8 @@ Page({
         statusText: orderStatusText(order.orderStatus),
         payAmountText: money(order.payAmount),
         itemCount: (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+        hasReview: !!order.review,
+        reviewSummary: order.review ? `${order.review.rating} 星评价` : '',
         canAccept: Number(order.orderStatus) === 20,
         canReject: Number(order.orderStatus) === 20,
         canToCooking: Number(order.orderStatus) === 30,

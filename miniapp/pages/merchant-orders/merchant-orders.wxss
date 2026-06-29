@@ -129,9 +129,29 @@
   font-weight: 900;
 }
 
+.status-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
 .status.waiting {
   background: #fff1e8;
   color: #ff6500;
+}
+
+.review-badge {
+  height: 38rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  background: #fff5e8;
+  color: #c46a00;
+  display: flex;
+  align-items: center;
+  font-size: 21rpx;
+  font-weight: 900;
 }
 
 .customer-line,

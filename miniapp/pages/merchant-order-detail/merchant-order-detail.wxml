@@ -64,6 +64,15 @@
       </view>
     </view>
 
+    <view wx:if="{{order.hasReview}}" class="panel review-panel">
+      <view class="section-title">用户评价</view>
+      <view class="review-stars">
+        <text wx:for="{{[1, 2, 3, 4, 5]}}" wx:key="*this" class="{{item <= order.review.rating ? 'star active' : 'star'}}">★</text>
+      </view>
+      <view class="review-content">{{order.review.content || '用户未填写文字评价'}}</view>
+      <view class="review-time">{{order.review.createdAt}}</view>
+    </view>
+
     <view class="bottom-actions">
       <button wx:if="{{order.canReject}}" class="ghost-btn" bindtap="rejectOrder">拒单</button>
       <button wx:if="{{order.canAccept}}" class="primary-btn" bindtap="acceptOrder">接单</button>

@@ -32,6 +32,7 @@ Page({
           goodsAmountText: money(order.goodsAmount),
           deliveryFeeText: money(order.deliveryFee),
           payAmountText: money(order.payAmount),
+          hasReview: !!order.review,
           canAccept: Number(order.orderStatus) === 20,
           canReject: Number(order.orderStatus) === 20,
           canToCooking: Number(order.orderStatus) === 30,

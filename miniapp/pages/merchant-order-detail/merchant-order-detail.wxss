@@ -48,7 +48,8 @@
 
 .status-card,
 .item-panel,
-.info-panel {
+.info-panel,
+.review-panel {
   margin-bottom: 14rpx;
   padding: 22rpx;
   border-radius: 16rpx;
@@ -200,6 +201,33 @@
 
 .address-line .info-value {
   max-width: 480rpx;
+}
+
+.review-stars {
+  display: flex;
+  gap: 8rpx;
+}
+
+.star {
+  color: #d8dde5;
+  font-size: 34rpx;
+}
+
+.star.active {
+  color: #ff9f1a;
+}
+
+.review-content {
+  margin-top: 14rpx;
+  color: #20242a;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.review-time {
+  margin-top: 10rpx;
+  color: #8a8f98;
+  font-size: 23rpx;
 }
 
 .bottom-actions {
