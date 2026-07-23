@@ -5,6 +5,7 @@ import com.takeout.domain.enums.OrderStatus;
 import com.takeout.dto.merchant.MerchantStatisticsResponse;
 import com.takeout.repository.DishRepository;
 import com.takeout.repository.OrderRepository;
+import com.takeout.security.AdminContext;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,18 +16,19 @@ import java.util.List;
 @Service
 public class MerchantStatisticsService {
 
-    private static final Long DEFAULT_SHOP_ID = 1L;
-
     private final OrderRepository orderRepository;
     private final DishRepository dishRepository;
+    private final AdminContext adminContext;
 
-    public MerchantStatisticsService(OrderRepository orderRepository, DishRepository dishRepository) {
+    public MerchantStatisticsService(OrderRepository orderRepository, DishRepository dishRepository, AdminContext adminContext) {
         this.orderRepository = orderRepository;
         this.dishRepository = dishRepository;
+        this.adminContext = adminContext;
     }
 
     public MerchantStatisticsResponse overview() {
-        List<Order> orders = orderRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(DEFAULT_SHOP_ID, 0);
+        Long shopId = adminContext.requireShopId();
+        List<Order> orders = orderRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(shopId, 0);
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         long todayOrderCount = orders.stream()
                 .filter(order -> order.getCreatedAt() != null && !order.getCreatedAt().isBefore(startOfToday))
@@ -41,7 +43,7 @@ public class MerchantStatisticsService {
                 .filter(order -> order.getCreatedAt() != null && !order.getCreatedAt().isBefore(startOfToday))
                 .filter(order -> order.getOrderStatus().equals(OrderStatus.PAID_WAIT_ACCEPT.getCode()))
                 .count();
-        long dishCount = dishRepository.findByShopIdAndStatusAndIsDeleted(DEFAULT_SHOP_ID, 1, 0).size();
+        long dishCount = dishRepository.findByShopIdAndStatusAndIsDeleted(shopId, 1, 0).size();
         return new MerchantStatisticsResponse(todayOrderCount, todaySalesAmount, pendingOrderCount, dishCount);
     }
 }

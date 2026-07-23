@@ -26,7 +26,7 @@ public class AdminAccount {
     @Column(nullable = false, length = 50)
     private String role;
 
-    @Column(nullable = false)
+    @Column
     private Long shopId;
 
     @Column(nullable = false, length = 100)
@@ -34,6 +34,15 @@ public class AdminAccount {
 
     @Column(nullable = false)
     private Integer status;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer tokenVersion = 0;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer failedLoginAttempts = 0;
+
+    @Column
+    private LocalDateTime lockedUntil;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -104,6 +113,19 @@ public class AdminAccount {
     public void setStatus(Integer status) {
         this.status = status;
     }
+
+    public Integer getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public void setTokenVersion(Integer tokenVersion) {
+        this.tokenVersion = tokenVersion;
+    }
+
+    public Integer getFailedLoginAttempts() { return failedLoginAttempts; }
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+    public LocalDateTime getLockedUntil() { return lockedUntil; }
+    public void setLockedUntil(LocalDateTime lockedUntil) { this.lockedUntil = lockedUntil; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

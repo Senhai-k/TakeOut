@@ -7,8 +7,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  sql:
+    init:
+      mode: never
 
 takeout:
+  app:
+    allow-anonymous-test-user: true
   upload:
     dir: target/test-uploads
     max-size-bytes: 2097152

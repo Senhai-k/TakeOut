@@ -8,6 +8,7 @@ public enum ErrorCode {
     FORBIDDEN(40300, "无权限"),
     NOT_FOUND(40400, "数据不存在"),
     CONFLICT(40900, "数据状态冲突"),
+    RATE_LIMITED(42900, "请求过于频繁，请稍后再试"),
     SYSTEM_ERROR(50000, "系统异常");
 
     private final int code;

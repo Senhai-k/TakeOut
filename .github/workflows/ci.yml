@@ -71,3 +71,75 @@ jobs:
           while IFS= read -r file; do
             node --check "$file"
           done < <(find miniapp -type f -name "*.js" | sort)
+
+  deployment:
+    name: Deployment config and repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose configuration
+        env:
+          TAKEOUT_JWT_SECRET: ci-validation-only-secret
+          MYSQL_PASSWORD: ci-validation-db-password
+          MYSQL_ROOT_PASSWORD: ci-validation-root-password
+          REDIS_PASSWORD: ci-validation-redis-password
+        run: docker compose -f deploy/docker/docker-compose.mysql.yml -f deploy/docker/docker-compose.redis.yml config --quiet
+
+      - name: Validate PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @('scripts/mysql-backup.ps1', 'scripts/mysql-restore.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          }
+
+      - name: Reject tracked runtime artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked=$(git ls-files | grep -E '(^|/)(target|dist|node_modules|data|backups)/|\.log$|\.mv\.db$' | grep -v '^server/uploads/.gitkeep$' || true)
+          if [[ -n "$tracked" ]]; then
+            echo "$tracked"
+            exit 1
+          fi
+
+  deployment:
+    name: Deployment config and repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose configuration
+        env:
+          TAKEOUT_JWT_SECRET: ci-validation-only-secret
+          MYSQL_PASSWORD: ci-validation-db-password
+          MYSQL_ROOT_PASSWORD: ci-validation-root-password
+          REDIS_PASSWORD: ci-validation-redis-password
+        run: docker compose -f deploy/docker/docker-compose.mysql.yml -f deploy/docker/docker-compose.redis.yml config --quiet
+
+      - name: Validate PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @('scripts/mysql-backup.ps1', 'scripts/mysql-restore.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          }
+
+      - name: Reject tracked runtime artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked=$(git ls-files | grep -E '(^|/)(target|dist|node_modules|data|backups)/|\.log$|\.mv\.db$' | grep -v '^server/uploads/.gitkeep$' || true)
+          if [[ -n "$tracked" ]]; then
+            echo "$tracked"
+            exit 1
+          fi

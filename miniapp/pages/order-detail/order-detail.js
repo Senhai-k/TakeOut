@@ -47,6 +47,7 @@ Page({
         deliveryFeeText: money(order.deliveryFee),
         payAmountText: money(order.payAmount),
         paymentMethodName: order.paymentMethod ? order.paymentMethod.name : '模拟支付',
+        refundAmountText: order.refund ? money(order.refund.amount) : '',
         canPay: order.orderStatus === 10,
         canCancel: order.orderStatus < 50 && order.orderStatus !== 70,
         canComplete: order.orderStatus === 50,
@@ -84,7 +85,7 @@ Page({
         try {
           const order = await orderService.cancelOrder(this.data.order.id)
           this.setOrder(order)
-          wx.showToast({ title: '已取消', icon: 'success' })
+          wx.showToast({ title: order.orderStatus === 90 ? '退款成功' : '已取消', icon: 'success' })
         } catch (error) {
           wx.showToast({ title: error.message || '取消失败', icon: 'none' })
         }
@@ -138,14 +139,10 @@ Page({
     })
   },
 
-  submitReview() {
+  async submitReview() {
     const order = this.data.order
     if (!order || !order.canReview) return
-    const review = reviewService.saveReview({
-      orderId: order.id,
-      rating: this.data.reviewDraft.rating,
-      content: this.data.reviewDraft.content
-    })
+    const review = await reviewService.saveReview({ orderId: order.id, rating: this.data.reviewDraft.rating, content: this.data.reviewDraft.content })
     this.setData({
       'reviewDraft.content': ''
     })

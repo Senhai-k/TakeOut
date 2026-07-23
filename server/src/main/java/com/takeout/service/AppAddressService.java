@@ -6,6 +6,7 @@ import com.takeout.dto.app.AddressRequest;
 import com.takeout.dto.app.AddressResponse;
 import com.takeout.exception.BusinessException;
 import com.takeout.repository.UserAddressRepository;
+import com.takeout.security.AppUserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,16 +16,16 @@ import java.util.List;
 @Service
 public class AppAddressService {
 
-    private static final Long DEFAULT_USER_ID = 1L;
-
     private final UserAddressRepository userAddressRepository;
+    private final AppUserContext userContext;
 
-    public AppAddressService(UserAddressRepository userAddressRepository) {
+    public AppAddressService(UserAddressRepository userAddressRepository, AppUserContext userContext) {
         this.userAddressRepository = userAddressRepository;
+        this.userContext = userContext;
     }
 
     public List<AddressResponse> listAddresses() {
-        return userAddressRepository.findByUserIdAndIsDeletedOrderByIsDefaultDescUpdatedAtDesc(DEFAULT_USER_ID, 0)
+        return userAddressRepository.findByUserIdAndIsDeletedOrderByIsDefaultDescUpdatedAtDesc(userContext.requireUserId(), 0)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -34,7 +35,7 @@ public class AppAddressService {
     public AddressResponse createAddress(AddressRequest request) {
         LocalDateTime now = LocalDateTime.now();
         UserAddress address = new UserAddress();
-        address.setUserId(DEFAULT_USER_ID);
+        address.setUserId(userContext.requireUserId());
         applyRequest(address, request);
         address.setIsDeleted(0);
         address.setCreatedAt(now);
@@ -74,7 +75,7 @@ public class AppAddressService {
     }
 
     UserAddress getAddressEntity(Long id) {
-        return userAddressRepository.findByIdAndUserIdAndIsDeleted(id, DEFAULT_USER_ID, 0)
+        return userAddressRepository.findByIdAndUserIdAndIsDeleted(id, userContext.requireUserId(), 0)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "地址不存在"));
     }
 
@@ -94,7 +95,7 @@ public class AppAddressService {
     }
 
     private void clearDefaultExcept(Long keepId) {
-        userAddressRepository.findByUserIdAndIsDeleted(DEFAULT_USER_ID, 0)
+        userAddressRepository.findByUserIdAndIsDeleted(userContext.requireUserId(), 0)
                 .stream()
                 .filter(address -> keepId == null || !address.getId().equals(keepId))
                 .forEach(address -> {

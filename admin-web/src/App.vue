@@ -28,6 +28,8 @@
     </section>
   </div>
 
+  <PlatformApp v-else-if="adminSession.role === 'PLATFORM_ADMIN'" :session="adminSession" @logout="logoutAdmin" />
+
   <div v-else class="shell">
     <aside class="sidebar">
       <div class="brand">
@@ -65,7 +67,7 @@
           <p>{{ currentDescription }}</p>
         </div>
         <div class="topbar-actions">
-          <button class="ghost" @click="resetSeed">重置基础数据</button>
+          <button class="ghost mobile-logout" @click="logoutAdmin">退出</button>
           <button class="refresh-btn" @click="refresh">刷新数据</button>
         </div>
       </header>
@@ -228,13 +230,33 @@
         </div>
       </section>
 
+      <section v-else-if="activeView === 'shop'" class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>店铺设置</h2>
+            <div class="panel-subtitle">维护用户端展示信息和下单规则</div>
+          </div>
+        </div>
+        <div v-if="shopError" class="inline-error">{{ shopError }}</div>
+        <div class="form shop-form">
+          <label><span>店铺名称</span><input v-model.trim="shopForm.name" maxlength="100" /></label>
+          <label><span>联系电话</span><input v-model.trim="shopForm.phone" maxlength="30" /></label>
+          <label class="full"><span>店铺公告</span><textarea v-model="shopForm.notice" maxlength="500"></textarea></label>
+          <label class="full"><span>店铺地址</span><input v-model.trim="shopForm.address" maxlength="255" /></label>
+          <label><span>起送价</span><input v-model.number="shopForm.minOrderAmount" type="number" min="0" step="0.01" /></label>
+          <label><span>配送费</span><input v-model.number="shopForm.deliveryFee" type="number" min="0" step="0.01" /></label>
+          <label><span>营业状态</span><select v-model.number="shopForm.businessStatus"><option :value="1">营业中</option><option :value="0">休息中</option></select></label>
+          <div class="form-actions full"><button class="primary" :disabled="shopSaving" @click="saveShop">{{ shopSaving ? '保存中...' : '保存设置' }}</button></div>
+        </div>
+      </section>
+
       <section v-else class="dashboard-board">
         <section class="panel hero-panel">
           <div>
-            <div class="hero-kicker">Operations</div>
-            <div class="hero-title">订单、菜品和经营数据已接入真实后端</div>
+            <div class="hero-kicker">{{ adminSession.shopName }}</div>
+            <div class="hero-title">今日经营工作台</div>
             <p class="hero-copy">
-              当前后台支持 JWT 登录、基础数据重置、订单处理、分类菜品维护和本地图片上传。
+              {{ overview.pendingOrderCount > 0 ? `有 ${overview.pendingOrderCount} 笔订单等待处理` : '当前没有待接订单' }}
             </p>
           </div>
           <div class="hero-actions">
@@ -267,43 +289,15 @@
 
           <article class="panel flow-panel">
             <div class="panel-head compact">
-              <h2>业务链路</h2>
-              <button class="link-btn" @click="resetSeed">重置数据</button>
+              <h2>快捷管理</h2>
             </div>
-            <div class="flow-steps">
-              <span>登录后台</span>
-              <span>重置数据</span>
-              <span>小程序下单</span>
-              <span>模拟支付</span>
-              <span>后台接单</span>
-              <span>完成订单</span>
+            <div class="quick-actions">
+              <button @click="activeView = 'orders'"><strong>订单管理</strong><span>查看并处理订单</span></button>
+              <button @click="activeView = 'categories'"><strong>分类管理</strong><span>调整菜单结构</span></button>
+              <button @click="activeView = 'dishes'"><strong>菜品管理</strong><span>维护价格和库存</span></button>
+              <button @click="activeView = 'shop'"><strong>店铺设置</strong><span>更新营业信息</span></button>
             </div>
           </article>
-        </section>
-
-        <section class="panel capability-panel">
-          <div class="panel-head compact">
-            <h2>功能覆盖</h2>
-            <span class="panel-note">当前版本边界说明</span>
-          </div>
-          <div class="capability-grid">
-            <div class="capability-item">
-              <strong>后台认证</strong>
-              <span>BCrypt 密码校验，JWT 保护管理接口。</span>
-            </div>
-            <div class="capability-item">
-              <strong>订单闭环</strong>
-              <span>下单、支付、接单、制作、配送、完成。</span>
-            </div>
-            <div class="capability-item">
-              <strong>商品维护</strong>
-              <span>分类、菜品、库存、上下架和图片上传。</span>
-            </div>
-            <div class="capability-item">
-              <strong>数据恢复</strong>
-              <span>一键恢复基础数据，小程序保留本地 fallback。</span>
-            </div>
-          </div>
         </section>
       </section>
     </main>
@@ -414,6 +408,7 @@
         </div>
         <div class="detail-address">{{ currentOrder.receiverAddress }}</div>
         <div v-if="currentOrder.remark" class="detail-remark">备注：{{ currentOrder.remark }}</div>
+        <div v-if="currentOrder.refund" class="detail-remark">退款：{{ currentOrder.refund.refundNo }} · ¥{{ formatMoney(currentOrder.refund.amount) }} · {{ currentOrder.refund.reason }}</div>
         <div class="detail-items">
           <div v-for="item in currentOrder.items" :key="`${currentOrder.id}-${item.dishId}`" class="detail-item">
             <div>
@@ -438,6 +433,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import PlatformApp from './PlatformApp.vue'
 import {
   acceptOrder,
   createCategory,
@@ -446,16 +442,18 @@ import {
   deleteDish,
   getOrderDetail,
   getOverview,
+  getShop,
   listCategories,
   listDishes,
   listOrders,
   loginAdmin,
-  resetSeedData,
+  logoutAdminSession,
   rejectOrder,
   updateCategory,
   updateDish,
   updateDishStatus,
   updateOrderStatus,
+  updateShop,
   uploadImage
 } from './api/admin'
 
@@ -464,7 +462,8 @@ const navItems = [
   { key: 'dashboard', label: '经营概览' },
   { key: 'orders', label: '订单管理' },
   { key: 'categories', label: '分类管理' },
-  { key: 'dishes', label: '菜品管理' }
+  { key: 'dishes', label: '菜品管理' },
+  { key: 'shop', label: '店铺设置' }
 ]
 
 const activeView = ref('dashboard')
@@ -503,6 +502,9 @@ const orderBusyId = ref(null)
 const formError = ref('')
 const savingForm = ref(false)
 const uploading = ref(false)
+const shopForm = reactive({ name: '', logoUrl: '', notice: '', phone: '', address: '', minOrderAmount: 0, deliveryFee: 0, businessStatus: 1 })
+const shopSaving = ref(false)
+const shopError = ref('')
 
 const filters = [
   { label: '全部', status: 0 },
@@ -522,6 +524,7 @@ const currentDescription = computed(() => {
   if (activeView.value === 'orders') return '查看和处理当前店铺订单'
   if (activeView.value === 'categories') return '维护菜品分类和排序'
   if (activeView.value === 'dishes') return '维护商品、价格、库存和上架状态'
+  if (activeView.value === 'shop') return '维护店铺资料、费用和营业状态'
   return '快速查看今日经营核心指标'
 })
 
@@ -597,14 +600,6 @@ async function refresh() {
   await Promise.all([loadOverview(), loadByView()])
 }
 
-async function resetSeed() {
-  if (!window.confirm('确定重置基础数据吗？当前订单、购物车和基础数据会恢复到初始状态。')) return
-  await resetSeedData()
-  orderPage.page = 1
-  orderSearch.value = ''
-  await refresh()
-}
-
 function readAdminSession() {
   try {
     const raw = window.localStorage.getItem('takeout_admin_session')
@@ -629,7 +624,7 @@ async function submitLogin() {
       password: loginForm.password
     })
     saveAdminSession(session)
-    await refresh()
+    if (session.role === 'MERCHANT_ADMIN') await refresh()
   } catch (error) {
     loginError.value = error.message || '登录失败'
   } finally {
@@ -637,7 +632,12 @@ async function submitLogin() {
   }
 }
 
-function logoutAdmin() {
+async function logoutAdmin() {
+  try {
+    await logoutAdminSession()
+  } catch (error) {
+    // Clearing the browser session is required even if server logout fails.
+  }
   window.localStorage.removeItem('takeout_admin_session')
   adminSession.value = null
 }
@@ -721,7 +721,37 @@ async function loadByView() {
   if (activeView.value === 'orders') return loadOrders()
   if (activeView.value === 'categories') return loadCategories()
   if (activeView.value === 'dishes') return loadDishes()
+  if (activeView.value === 'shop') return loadShop()
   return Promise.resolve()
+}
+
+async function loadShop() {
+  shopError.value = ''
+  try {
+    Object.assign(shopForm, await getShop())
+  } catch (error) {
+    shopError.value = error.message || '店铺信息加载失败'
+  }
+}
+
+async function saveShop() {
+  if (!shopForm.name || Number(shopForm.minOrderAmount) < 0 || Number(shopForm.deliveryFee) < 0) {
+    shopError.value = '请填写有效的店铺名称、起送价和配送费'
+    return
+  }
+  shopSaving.value = true
+  shopError.value = ''
+  try {
+    Object.assign(shopForm, await updateShop({
+      name: shopForm.name, logoUrl: shopForm.logoUrl || '', notice: shopForm.notice || '', phone: shopForm.phone || '',
+      address: shopForm.address || '', minOrderAmount: Number(shopForm.minOrderAmount), deliveryFee: Number(shopForm.deliveryFee),
+      businessStatus: Number(shopForm.businessStatus)
+    }))
+  } catch (error) {
+    shopError.value = error.message || '店铺信息保存失败'
+  } finally {
+    shopSaving.value = false
+  }
 }
 
 function openCategoryForm(item = null) {
@@ -919,7 +949,7 @@ watch(activeView, () => {
 
 onMounted(async () => {
   window.addEventListener('takeout-admin-unauthorized', handleUnauthorized)
-  if (adminSession.value) {
+  if (adminSession.value?.role === 'MERCHANT_ADMIN') {
     await refresh()
   }
 })

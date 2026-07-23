@@ -1,6 +1,8 @@
 package com.takeout.config;
 
 import com.takeout.security.AdminJwtAuthenticationFilter;
+import com.takeout.security.AppJwtAuthenticationFilter;
+import com.takeout.security.ApiRateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,13 +31,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            AdminJwtAuthenticationFilter adminJwtAuthenticationFilter
+            AdminJwtAuthenticationFilter adminJwtAuthenticationFilter,
+            AppJwtAuthenticationFilter appJwtAuthenticationFilter,
+            ApiRateLimitFilter apiRateLimitFilter
     ) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> registry.anyRequest().permitAll())
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .addFilterBefore(adminJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiRateLimitFilter, AdminJwtAuthenticationFilter.class)
+                .addFilterAfter(appJwtAuthenticationFilter, AdminJwtAuthenticationFilter.class)
                 .build();
     }
 }

@@ -8,10 +8,14 @@ import com.takeout.domain.Shop;
 import com.takeout.domain.enums.OrderStatus;
 import com.takeout.dto.app.OrderDetailResponse;
 import com.takeout.dto.app.OrderItemResponse;
+import com.takeout.dto.app.OrderReviewResponse;
 import com.takeout.exception.BusinessException;
 import com.takeout.repository.OrderItemRepository;
 import com.takeout.repository.OrderRepository;
+import com.takeout.repository.OrderReviewRepository;
 import com.takeout.repository.ShopRepository;
+import com.takeout.repository.RefundRepository;
+import com.takeout.security.AdminContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,27 +25,41 @@ import java.util.List;
 @Service
 public class MerchantOrderService {
 
-    private static final Long DEFAULT_SHOP_ID = 1L;
-
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ShopRepository shopRepository;
+    private final OrderReviewRepository orderReviewRepository;
+    private final InventoryService inventoryService;
+    private final RefundService refundService;
+    private final AdminContext adminContext;
+    private final RefundRepository refundRepository;
 
     public MerchantOrderService(
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
-            ShopRepository shopRepository
+            ShopRepository shopRepository,
+            OrderReviewRepository orderReviewRepository,
+            InventoryService inventoryService,
+            RefundService refundService,
+            RefundRepository refundRepository,
+            AdminContext adminContext
     ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.shopRepository = shopRepository;
+        this.orderReviewRepository = orderReviewRepository;
+        this.inventoryService = inventoryService;
+        this.refundService = refundService;
+        this.refundRepository = refundRepository;
+        this.adminContext = adminContext;
     }
 
     public PageResult<OrderDetailResponse> listOrders(Integer status, String orderNo, long page, long pageSize) {
+        Long shopId = adminContext.requireShopId();
         List<Order> orders = status == null
-                ? orderRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(DEFAULT_SHOP_ID, 0)
+                ? orderRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(shopId, 0)
                 : orderRepository.findByShopIdAndOrderStatusAndIsDeletedOrderByCreatedAtDesc(
-                        DEFAULT_SHOP_ID,
+                        shopId,
                         status,
                         0
                 );
@@ -77,11 +95,13 @@ public class MerchantOrderService {
     @Transactional
     public OrderDetailResponse rejectOrder(Long id, String reason) {
         Order order = getOrder(id);
+        if (order.getOrderStatus().equals(OrderStatus.REFUNDED.getCode())) return toOrderDetailResponse(order);
         requireStatus(order, OrderStatus.PAID_WAIT_ACCEPT);
-        order.setOrderStatus(OrderStatus.CANCELLED.getCode());
         order.setRemark(appendRejectReason(order.getRemark(), reason));
         order.setUpdatedAt(LocalDateTime.now());
-        return toOrderDetailResponse(orderRepository.save(order));
+        orderRepository.save(order);
+        return toOrderDetailResponse(refundService.refund(order.getId(), "merchant-reject-" + order.getId(),
+                reason == null || reason.isBlank() ? "商家拒单" : reason, "MERCHANT"));
     }
 
     @Transactional
@@ -99,7 +119,7 @@ public class MerchantOrderService {
     private Order getOrder(Long id) {
         return orderRepository.findById(id)
                 .filter(order -> order.getIsDeleted() == 0)
-                .filter(order -> order.getShopId().equals(DEFAULT_SHOP_ID))
+                .filter(order -> order.getShopId().equals(adminContext.requireShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "订单不存在"));
     }
 
@@ -149,7 +169,12 @@ public class MerchantOrderService {
                 order.getPayStatus(),
                 order.getOrderStatus(),
                 items,
-                order.getCreatedAt()
+                order.getCreatedAt(),
+                orderReviewRepository.findByOrderId(order.getId())
+                        .map(review -> new OrderReviewResponse(review.getId(), review.getOrderId(), review.getRating(), review.getContent(), review.getCreatedAt()))
+                        .orElse(null),
+                refundRepository.findByOrderId(order.getId()).map(refund -> new com.takeout.dto.app.RefundResponse(
+                        refund.getId(), refund.getRefundNo(), refund.getAmount(), refund.getStatus(), refund.getReason(), refund.getSource(), refund.getCreatedAt())).orElse(null)
         );
     }
 

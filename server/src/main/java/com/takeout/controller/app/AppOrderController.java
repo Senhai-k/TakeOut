@@ -5,6 +5,9 @@ import com.takeout.common.PageResult;
 import com.takeout.dto.app.CreateOrderRequest;
 import com.takeout.dto.app.CreateOrderResponse;
 import com.takeout.dto.app.OrderDetailResponse;
+import com.takeout.dto.app.OrderReviewRequest;
+import com.takeout.dto.app.OrderReviewResponse;
+import com.takeout.dto.app.MockPayRequest;
 import com.takeout.service.AppMockService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,8 +48,8 @@ public class AppOrderController {
     }
 
     @PostMapping("/{id}/mock-pay")
-    public ApiResponse<OrderDetailResponse> mockPay(@PathVariable Long id) {
-        return ApiResponse.success(appMockService.mockPay(id));
+    public ApiResponse<OrderDetailResponse> mockPay(@PathVariable Long id, @Valid @RequestBody(required = false) MockPayRequest request) {
+        return ApiResponse.success(appMockService.mockPay(id, request == null ? null : request.requestId()));
     }
 
     @PostMapping("/{id}/cancel")
@@ -57,5 +60,10 @@ public class AppOrderController {
     @PostMapping("/{id}/complete")
     public ApiResponse<OrderDetailResponse> completeOrder(@PathVariable Long id) {
         return ApiResponse.success(appMockService.completeOrder(id));
+    }
+
+    @PostMapping("/{id}/review")
+    public ApiResponse<OrderReviewResponse> reviewOrder(@PathVariable Long id, @Valid @RequestBody OrderReviewRequest request) {
+        return ApiResponse.success(appMockService.reviewOrder(id, request));
     }
 }

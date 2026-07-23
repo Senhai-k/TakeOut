@@ -20,6 +20,8 @@ public record OrderDetailResponse(
         Integer payStatus,
         Integer orderStatus,
         List<OrderItemResponse> items,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        OrderReviewResponse review,
+        RefundResponse refund
 ) {
 }

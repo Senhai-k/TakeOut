@@ -42,6 +42,8 @@ Authorization: Bearer <token>
 
 登录、首页商品列表等公开接口可以不传 `Authorization`。
 
+客户端可以在任意请求中携带由字母、数字、点、下划线或短横线组成的 `X-Request-Id`（8-64 位）。服务端会在响应头回传该值并写入访问日志；缺失或格式不合法时自动生成新的 UUID。
+
 ### 1.3 统一响应格式
 
 成功：
@@ -89,14 +91,17 @@ Authorization: Bearer <token>
 | 40300 | 无权限 |
 | 40400 | 数据不存在 |
 | 40900 | 数据状态冲突 |
+| 42900 | 请求过于频繁，请稍后再试 |
 | 50000 | 系统异常 |
+
+参数校验错误只返回稳定的字段提示或“请求体格式错误”，不会返回 JSON 解析器、Java 类型或服务端堆栈；未处理异常会在服务端日志中按 `X-Request-Id` 记录。
 
 ## 2. 用户端接口
 
 ### 2.1 微信登录
 
 ```text
-POST /api/app/auth/wechat-login
+POST /api/app/auth/login
 ```
 
 请求参数：
@@ -143,7 +148,7 @@ GET /api/app/users/me
 ### 2.3 绑定手机号
 
 ```text
-POST /api/app/users/bind-phone
+POST /api/app/auth/phone
 ```
 
 请求参数：
@@ -158,15 +163,38 @@ POST /api/app/users/bind-phone
 
 ```json
 {
+  "userId": 1,
   "phone": "13800000000"
 }
 ```
+
+该接口需要用户 Access Token。开发模式下 `phoneCode` 可使用合法手机号进行联调；微信模式下仅接受 `getPhoneNumber` 返回的一次性 code，由后端调用微信接口换取手机号。
 
 ### 2.4 个人中心统计
 
 ```text
 GET /api/app/auth/profile-stats
 ```
+
+登录响应同时返回 `token`（访问 Token）和 `refreshToken`（刷新 Token）。刷新接口为 `POST /api/app/auth/refresh`，后台对应接口为 `POST /api/admin/auth/refresh`；刷新 Token 不能直接访问业务接口。
+
+刷新成功后会同时返回新的访问 Token 和刷新 Token，原刷新 Token 立即失效，不可重复使用。退出登录接口为 `POST /api/app/auth/logout` 和 `POST /api/admin/auth/logout`，请求体均为：
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
+退出成功后，该账号当前版本的访问 Token 和刷新 Token 均失效。客户端即使在退出请求失败时也会清理本地会话。
+
+除登录、店铺和菜品浏览外，用户端地址、购物车、订单、评价和统计接口均需携带：
+
+```text
+Authorization: Bearer <app-user-token>
+```
+
+开发模式可传入 `{ "code": "dev-user-1" }` 或 `{ "code": "dev-user-2" }`；不传时默认使用第一个开发用户。`TAKEOUT_WECHAT_MODE=wechat` 时，服务端使用该 code 调用微信 `jscode2session`，按 openid 查询用户，并在首次登录时自动建档。
 
 响应数据：
 
@@ -422,7 +450,8 @@ POST /api/app/orders
   "shopId": 1,
   "addressId": 1,
   "cartItemIds": [1, 2],
-  "remark": "不要辣"
+  "remark": "不要辣",
+  "idempotencyKey": "miniapp-order-unique-key"
 }
 ```
 
@@ -443,6 +472,7 @@ POST /api/app/orders
 - 商品下架或库存不足时不能提交订单。
 - 商品金额低于起送价时不能提交订单。
 - 订单创建后购物车中对应商品应删除。
+- 相同用户重复提交同一个 `idempotencyKey` 时返回首次创建的订单，不重复扣减库存。
 
 ### 6.2 订单列表
 
@@ -502,13 +532,7 @@ GET /api/app/orders/{id}
 POST /api/app/orders/{id}/cancel
 ```
 
-请求参数：
-
-```json
-{
-  "reason": "不想要了"
-}
-```
+该接口无需请求体。待支付订单取消后进入 `70 已取消`；已经支付且尚未配送的订单执行幂等退款并进入 `90 已退款`。配送中及之后的订单不能取消。
 
 ### 6.5 创建支付
 
@@ -548,9 +572,16 @@ POST /api/app/payments/wechat/callback
 POST /api/app/orders/{id}/mock-pay
 ```
 
+```json
+{
+  "requestId": "miniapp-mock-pay-order-id"
+}
+```
+
 说明：
 
 - 仅用于本地开发或未申请微信支付时测试。
+- 相同 `requestId` 重复提交时返回同一支付结果，不重复生成流水。
 - 生产环境应关闭。
 
 ## 7. 商家端接口
@@ -814,10 +845,18 @@ POST /api/admin/auth/login
 }
 ```
 
+登录响应包含 `adminId`、`username`、`displayName`、`role`、`shopId`、`shopName` 和 `token`。商家管理员角色为 `MERCHANT_ADMIN`，平台管理员角色为 `PLATFORM_ADMIN`；商家接口从 JWT 的 `shopId` 获取数据范围，不接受客户端传入店铺 ID。
+
+全局开发数据重置仅允许平台管理员调用：
+
+```text
+POST /api/platform/seed/reset
+```
+
 ### 8.2 用户列表
 
 ```text
-GET /api/admin/users
+GET /api/platform/users
 ```
 
 查询参数：
@@ -832,7 +871,7 @@ GET /api/admin/users
 ### 8.3 禁用或启用用户
 
 ```text
-POST /api/admin/users/{id}/status
+POST /api/platform/users/{id}/status
 ```
 
 请求参数：
@@ -846,13 +885,13 @@ POST /api/admin/users/{id}/status
 ### 8.4 商家列表
 
 ```text
-GET /api/admin/shops
+GET /api/platform/shops
 ```
 
 ### 8.5 新增商家
 
 ```text
-POST /api/admin/shops
+POST /api/platform/shops
 ```
 
 请求参数：
@@ -871,13 +910,13 @@ POST /api/admin/shops
 ### 8.6 修改商家
 
 ```text
-PUT /api/admin/shops/{id}
+PUT /api/platform/shops/{id}
 ```
 
 ### 8.7 禁用或启用商家
 
 ```text
-POST /api/admin/shops/{id}/status
+POST /api/platform/shops/{id}/status
 ```
 
 请求参数：
@@ -891,7 +930,7 @@ POST /api/admin/shops/{id}/status
 ### 8.8 全部订单列表
 
 ```text
-GET /api/admin/orders
+GET /api/platform/orders
 ```
 
 查询参数：
@@ -899,24 +938,69 @@ GET /api/admin/orders
 | 参数 | 必填 | 说明 |
 | --- | --- | --- |
 | orderNo | 否 | 订单号 |
-| userId | 否 | 用户 ID |
 | shopId | 否 | 店铺 ID |
 | status | 否 | 订单状态 |
-| startTime | 否 | 开始时间 |
-| endTime | 否 | 结束时间 |
 | page | 否 | 页码 |
 | pageSize | 否 | 每页数量 |
 
 ### 8.9 全部订单详情
 
 ```text
-GET /api/admin/orders/{id}
+GET /api/platform/orders/{id}
 ```
 
-### 8.10 平台统计
+### 8.10 系统配置
 
 ```text
-GET /api/admin/statistics/overview
+GET /api/platform/configs
+PUT /api/platform/configs/{key}
+```
+
+当前支持 `order.unpaid_timeout_minutes`，值必须为 1 到 1440，修改后自动关闭任务在下一次扫描时生效。
+
+### 8.11 审计日志
+
+```text
+GET /api/platform/audit-logs
+```
+
+支持按 `adminId`、`action`、`targetType` 筛选。
+
+### 8.12 商家管理员账号
+
+```text
+GET /api/platform/merchant-admins
+POST /api/platform/merchant-admins/{id}/status
+POST /api/platform/merchant-admins/{id}/password
+```
+
+密码重置请求为 `{ "password": "新密码" }`，密码至少 6 位，响应不返回密码哈希。
+
+### 8.13 平台取消异常订单
+
+```text
+POST /api/platform/orders/{id}/cancel
+```
+
+平台允许取消待支付订单，也允许取消已支付待接单订单。待支付订单进入 `70 已取消`；已支付待接单订单执行幂等模拟退款并进入 `90 已退款`，同时将支付状态更新为 `2 已退款`、回补库存并记录审计日志。
+
+发生退款后，用户、商家和平台订单详情均包含 `refund`：
+
+```json
+{
+  "refundNo": "R20260723094700000",
+  "amount": 43.00,
+  "status": "SUCCESS",
+  "reason": "商品已售罄",
+  "source": "MERCHANT",
+  "createdAt": "2026-07-23T09:47:00"
+}
+```
+
+### 8.14 平台统计
+
+```text
+GET /api/platform/overview
 ```
 
 响应数据：
@@ -929,6 +1013,30 @@ GET /api/admin/statistics/overview
   "todaySalesAmount": 8800.00
 }
 ```
+
+### 7.13 获取和修改店铺信息
+
+```text
+GET /api/merchant/shop
+PUT /api/merchant/shop
+```
+
+修改请求包含 `name`、`logoUrl`、`notice`、`phone`、`address`、`minOrderAmount`、`deliveryFee` 和 `businessStatus`。接口需要管理端 JWT。
+
+### 7.14 提交订单评价
+
+```text
+POST /api/app/orders/{id}/review
+```
+
+```json
+{
+  "rating": 5,
+  "content": "配送很快"
+}
+```
+
+仅已完成订单可以评价，同一订单只能提交一次；订单详情响应的 `review` 字段返回评价数据。
 
 ## 9. 文件上传接口
 
@@ -962,6 +1070,7 @@ multipart/form-data
 
 - 第一版可先上传到本地服务器。
 - 后续可改为对象存储。
+- 上传会同时校验扩展名、Content-Type 和 PNG/JPEG/GIF/WebP 文件头，内容不匹配时返回 `40001`。
 
 ## 10. 订单状态常量
 

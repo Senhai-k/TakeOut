@@ -12,6 +12,7 @@ import com.takeout.exception.BusinessException;
 import com.takeout.repository.CartItemRepository;
 import com.takeout.repository.DishRepository;
 import com.takeout.repository.ShopRepository;
+import com.takeout.security.AppUserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,24 +24,25 @@ import java.util.Objects;
 @Service
 public class AppCartService {
 
-    private static final Long DEFAULT_USER_ID = 1L;
-
     private final CartItemRepository cartItemRepository;
     private final DishRepository dishRepository;
     private final ShopRepository shopRepository;
+    private final AppUserContext userContext;
 
     public AppCartService(
             CartItemRepository cartItemRepository,
             DishRepository dishRepository,
-            ShopRepository shopRepository
+            ShopRepository shopRepository,
+            AppUserContext userContext
     ) {
         this.cartItemRepository = cartItemRepository;
         this.dishRepository = dishRepository;
         this.shopRepository = shopRepository;
+        this.userContext = userContext;
     }
 
     public CartResponse getCart() {
-        return toCartResponse(cartItemRepository.findByUserIdOrderByCreatedAtDesc(DEFAULT_USER_ID));
+        return toCartResponse(cartItemRepository.findByUserIdOrderByCreatedAtDesc(userContext.requireUserId()));
     }
 
     @Transactional
@@ -59,7 +61,7 @@ public class AppCartService {
         CartItem item = findSameItem(shop.getId(), dish.getId(), request);
         if (item == null) {
             item = new CartItem();
-            item.setUserId(DEFAULT_USER_ID);
+            item.setUserId(userContext.requireUserId());
             item.setShopId(shop.getId());
             item.setDishId(dish.getId());
             item.setCreatedAt(now);
@@ -92,16 +94,16 @@ public class AppCartService {
 
     @Transactional
     public void deleteItem(Long id) {
-        cartItemRepository.deleteByIdAndUserId(id, DEFAULT_USER_ID);
+        cartItemRepository.deleteByIdAndUserId(id, userContext.requireUserId());
     }
 
     @Transactional
     public void clearCart() {
-        cartItemRepository.deleteByUserId(DEFAULT_USER_ID);
+        cartItemRepository.deleteByUserId(userContext.requireUserId());
     }
 
     List<CartItem> getCartItemsByIds(List<Long> ids) {
-        return cartItemRepository.findByUserIdAndIdIn(DEFAULT_USER_ID, ids);
+        return cartItemRepository.findByUserIdAndIdIn(userContext.requireUserId(), ids);
     }
 
     @Transactional
@@ -110,7 +112,7 @@ public class AppCartService {
     }
 
     private CartItem findSameItem(Long shopId, Long dishId, CartItemRequest request) {
-        return cartItemRepository.findByUserIdAndShopId(DEFAULT_USER_ID, shopId)
+        return cartItemRepository.findByUserIdAndShopId(userContext.requireUserId(), shopId)
                 .stream()
                 .filter(item -> item.getDishId().equals(dishId))
                 .filter(item -> Objects.equals(item.getSizeOption(), blankToNull(request.size())))
@@ -121,7 +123,7 @@ public class AppCartService {
     }
 
     private CartItem getCartItem(Long id) {
-        return cartItemRepository.findByIdAndUserId(id, DEFAULT_USER_ID)
+        return cartItemRepository.findByIdAndUserId(id, userContext.requireUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "购物车商品不存在"));
     }
 

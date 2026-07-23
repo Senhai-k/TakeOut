@@ -20,6 +20,7 @@ Page({
     minOrderGap: 0,
     canSubmit: false,
     submitting: false,
+    idempotencyKey: `miniapp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     paymentMethod: paymentService.getPaymentMethod(),
     goodsAmountText: '0.00',
     minOrderGapText: '0.00',
@@ -126,7 +127,8 @@ Page({
         goodsAmount: this.data.goodsAmount,
         deliveryFee: this.data.deliveryFee,
         payAmount: this.data.payAmount,
-        paymentMethod: this.data.paymentMethod
+        paymentMethod: this.data.paymentMethod,
+        idempotencyKey: this.data.idempotencyKey
       })
       cartService.clearCart()
       wx.redirectTo({

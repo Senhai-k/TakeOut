@@ -11,6 +11,7 @@ import com.takeout.dto.merchant.MerchantDishUpsertRequest;
 import com.takeout.exception.BusinessException;
 import com.takeout.repository.CategoryRepository;
 import com.takeout.repository.DishRepository;
+import com.takeout.security.AdminContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,18 +21,18 @@ import java.util.List;
 @Service
 public class MerchantCatalogService {
 
-    private static final Long DEFAULT_SHOP_ID = 1L;
-
     private final CategoryRepository categoryRepository;
     private final DishRepository dishRepository;
+    private final AdminContext adminContext;
 
-    public MerchantCatalogService(CategoryRepository categoryRepository, DishRepository dishRepository) {
+    public MerchantCatalogService(CategoryRepository categoryRepository, DishRepository dishRepository, AdminContext adminContext) {
         this.categoryRepository = categoryRepository;
         this.dishRepository = dishRepository;
+        this.adminContext = adminContext;
     }
 
     public PageResult<MerchantCategoryResponse> listCategories() {
-        List<MerchantCategoryResponse> records = categoryRepository.findByShopIdAndIsDeletedOrderBySortAsc(DEFAULT_SHOP_ID, 0)
+        List<MerchantCategoryResponse> records = categoryRepository.findByShopIdAndIsDeletedOrderBySortAsc(adminContext.requireShopId(), 0)
                 .stream()
                 .map(this::toCategoryResponse)
                 .toList();
@@ -41,20 +42,18 @@ public class MerchantCatalogService {
 
     @Transactional
     public MerchantCategoryResponse saveCategory(Long id, MerchantCategoryUpsertRequest request) {
+        Long shopId = adminContext.requireShopId();
         LocalDateTime now = LocalDateTime.now();
         Category category = id == null
                 ? new Category()
                 : categoryRepository.findById(id)
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "分类不存在"));
-        if (category.getShopId() != null && !DEFAULT_SHOP_ID.equals(category.getShopId())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "无权限修改该分类");
-        }
         if (category.getId() == null) {
             category.setId(nextCategoryId());
             category.setCreatedAt(now);
         }
-        category.setShopId(DEFAULT_SHOP_ID);
+        category.setShopId(shopId);
         category.setName(request.name().trim());
         category.setSort(request.sort());
         category.setStatus(request.status());
@@ -66,8 +65,9 @@ public class MerchantCatalogService {
 
     @Transactional
     public void deleteCategory(Long id) {
+        Long shopId = adminContext.requireShopId();
         Category category = categoryRepository.findById(id)
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "分类不存在"));
         category.setIsDeleted(1);
         category.setUpdatedAt(LocalDateTime.now());
@@ -75,7 +75,7 @@ public class MerchantCatalogService {
     }
 
     public PageResult<MerchantDishResponse> listDishes() {
-        List<MerchantDishResponse> records = dishRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(DEFAULT_SHOP_ID, 0)
+        List<MerchantDishResponse> records = dishRepository.findByShopIdAndIsDeletedOrderByCreatedAtDesc(adminContext.requireShopId(), 0)
                 .stream()
                 .map(this::toDishResponse)
                 .toList();
@@ -85,24 +85,22 @@ public class MerchantCatalogService {
 
     @Transactional
     public MerchantDishResponse saveDish(Long id, MerchantDishUpsertRequest request) {
+        Long shopId = adminContext.requireShopId();
         LocalDateTime now = LocalDateTime.now();
         Dish dish = id == null
                 ? new Dish()
                 : dishRepository.findById(id)
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "商品不存在"));
         Category category = categoryRepository.findById(request.categoryId())
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "分类不存在"));
-        if (!DEFAULT_SHOP_ID.equals(category.getShopId())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "商品分类不属于当前店铺");
-        }
         if (dish.getId() == null) {
             dish.setId(nextDishId());
             dish.setSalesCount(0);
             dish.setCreatedAt(now);
         }
-        dish.setShopId(DEFAULT_SHOP_ID);
+        dish.setShopId(shopId);
         dish.setCategoryId(request.categoryId());
         dish.setName(request.name().trim());
         dish.setImageUrl(request.imageUrl());
@@ -118,8 +116,9 @@ public class MerchantCatalogService {
 
     @Transactional
     public void deleteDish(Long id) {
+        Long shopId = adminContext.requireShopId();
         Dish dish = dishRepository.findById(id)
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "商品不存在"));
         dish.setIsDeleted(1);
         dish.setUpdatedAt(LocalDateTime.now());
@@ -128,8 +127,9 @@ public class MerchantCatalogService {
 
     @Transactional
     public MerchantDishResponse updateDishStatus(Long id, Integer status) {
+        Long shopId = adminContext.requireShopId();
         Dish dish = dishRepository.findById(id)
-                .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getIsDeleted() == 0 && shopId.equals(item.getShopId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "商品不存在"));
         dish.setStatus(status);
         dish.setUpdatedAt(LocalDateTime.now());

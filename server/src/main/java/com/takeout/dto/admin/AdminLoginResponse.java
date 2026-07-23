@@ -5,7 +5,9 @@ public record AdminLoginResponse(
         String username,
         String displayName,
         String role,
+        Long shopId,
         String shopName,
-        String token
+        String token,
+        String refreshToken
 ) {
 }

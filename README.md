@@ -8,7 +8,7 @@
 
 - 用户端：商家浏览、菜品搜索、规格选择、购物车、地址管理、确认订单、订单跟踪、评价和个人中心。
 - 商家后台：经营概览、订单处理、用户评价查看、分类管理、菜品管理和图片上传。
-- 后端服务：REST API、统一响应、参数校验、异常处理、JPA 持久化、H2 文件库和 JWT 管理端认证。
+- 后端服务：REST API、统一响应、参数校验、异常处理、JPA 持久化、H2 文件库、JWT 双 Token 认证和敏感接口限流。
 - 订单数据：后端优先，保留本地 fallback，并统一合并支付方式、评价等本地补充字段。
 - 工程验证：后端接口测试、管理后台生产构建、小程序 JS 语法检查和 GitHub Actions CI。
 
@@ -19,8 +19,8 @@
 | 用户端 | 原生微信小程序、WXML、WXSS、JavaScript |
 | 管理后台 | Vue 3、Vite、JavaScript |
 | 后端 | Java 17、Spring Boot 3.3、Spring Web、Spring Validation、Spring Data JPA |
-| 数据库 | H2 文件库，兼容 MySQL 模式；提供 MySQL 初始化脚本作为后续迁移参考 |
-| 部署 | Docker、Docker Compose、Nginx 配置示例 |
+| 数据库 | H2 文件库、MySQL 8、Flyway 版本迁移 |
+| 部署 | Docker、Docker Compose |
 | 测试 | JUnit 5、Spring MockMvc |
 
 ## 目录结构
@@ -31,7 +31,7 @@
 ├── admin-web/   # Vue 3 商家/平台管理后台
 ├── server/      # Spring Boot 后端服务
 ├── docs/        # 需求、接口、数据库、架构、订单流和部署文档
-├── deploy/      # Docker、Nginx 等部署配置
+├── deploy/      # Docker Compose 部署配置
 └── scripts/     # 本地开发和辅助脚本
 ```
 
@@ -42,7 +42,6 @@
 - [运行检查清单](docs/checklist.md)：本地运行和发布前检查项。
 - [接口文档](docs/api.md)：用户端和商家端 API。
 - [数据库设计](docs/database.md)：核心表结构和数据模型。
-- [版本记录](CHANGELOG.md)：版本变更摘要。
 
 ## 本地运行
 
@@ -59,6 +58,8 @@ mvn spring-boot:run
 Invoke-RestMethod http://127.0.0.1:8080/api/health
 ```
 
+编排系统可使用 `/actuator/health/liveness` 和 `/actuator/health/readiness`，其他 Actuator 端点默认不公开。
+
 默认数据库为 H2 文件库，数据文件位于 `server/data/`。H2 控制台默认路径为：
 
 ```text
@@ -72,7 +73,9 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 ```
 
-`mysql` profile 需要提前创建数据库，并通过环境变量配置连接信息。
+`mysql` profile 需要提前创建数据库，并通过环境变量配置连接信息。该 profile 会自动执行 Flyway 迁移、使用 Hibernate 校验结构，并默认关闭开发种子数据。
+
+Docker 所需变量可参考 `.env.example`；该文件只列变量名，不包含可用密钥。
 
 ### 2. 启动管理后台
 
@@ -149,7 +152,13 @@ Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object 
 ## 说明
 
 - 支付使用模拟支付接口，不接入真实微信支付。
-- 当前用户端使用默认登录；后台已具备 BCrypt 密码校验、JWT 签发和管理接口保护，但还不是完整多角色权限系统。
+- 下单和模拟支付均具有幂等请求号；未支付订单默认 15 分钟自动关闭并回补库存。
+- 用户端支持开发身份和官方微信 `code2Session` 两种模式，并提供微信手机号授权绑定；真实模式需要配置微信凭证、HTTPS 合法域名和相应主体权限。
+- 商家 JWT 已绑定店铺 ID，订单、分类、菜品、统计和店铺设置均按店铺隔离。
+- 平台管理员可在独立控制台查看平台概览、管理用户与商家状态，并筛选全平台订单。
 - 默认使用 H2 文件库，便于 clone 后直接运行；生产化可迁移到 MySQL。
 - 小程序端保留后端优先、本地 fallback 的策略，避免本地服务未启动时完全不可用。
 - 图片上传当前限制为 jpg、jpeg、png、webp、gif，默认最大 2MB。
+- 图片存储已通过接口与业务校验解耦，并验证扩展名、MIME 和文件头；当前实现仍使用本地磁盘。
+- 登录、Token 刷新和图片上传默认启用单实例内存限流；多实例部署应改用 Redis 或 API 网关统一计数。
+- 管理员连续登录失败达到阈值后会临时锁定，平台管理员重置密码可解除锁定。

@@ -10,7 +10,7 @@ TakeOut
 ├── admin-web/   Vue 3 商家管理后台
 ├── server/      Spring Boot 后端 API
 ├── docs/        项目文档
-├── deploy/      Docker、Nginx 配置
+├── deploy/      Docker Compose 配置
 └── scripts/     本地辅助脚本
 ```
 
@@ -83,6 +83,8 @@ config      Web、静态资源和安全配置
 
 当前后端重点把业务规则放在 service 层，例如订单状态流转、起送价校验、后台登录校验、基础数据重置等，Controller 保持薄入口。
 
+所有 HTTP 请求经过请求日志过滤器，响应统一返回 `X-Request-Id`。访问日志记录请求 ID、方法、路径、状态码和耗时，不读取请求体、Authorization 或 Cookie，避免密码和 Token 进入日志。
+
 ## 数据存储
 
 默认使用 H2 文件库：
@@ -91,49 +93,51 @@ config      Web、静态资源和安全配置
 server/data/
 ```
 
-`docs/database.md` 和初始化脚本保留了面向 MySQL 的设计说明，后续生产化可以迁移到 MySQL，并补充 Flyway 或 Liquibase 管理数据库版本。
+MySQL 表结构由 Flyway 的 `V1__baseline.sql` 管理，应用启动时先执行迁移，再由 Hibernate `validate` 校验实体与数据库结构。H2 本地模式继续使用 Hibernate 自动更新。
 
 当前配置包含：
 
 - 默认配置：H2 文件库，适合本地快速运行。
 - `test` profile：H2 内存库，供自动化测试使用。
 - `dev` profile：独立 H2 文件库，便于本地开发隔离数据。
-- `mysql` profile：MySQL 连接配置模板，使用环境变量传入连接信息。
+- `mysql` profile：启用 Flyway 和 Hibernate 结构校验，使用环境变量传入连接信息，默认关闭开发种子数据。
 
 ## 认证设计
 
 ### 用户端
 
-用户端当前使用默认登录，后端返回默认用户和 token，小程序展示登录状态并支持退出。该设计不等同于真实微信登录。
+用户端支持开发身份与官方微信身份两种模式。官方模式由小程序 `wx.login` 获取 code，后端调用 `jscode2session`，按 openid 自动建档，并支持微信手机号授权绑定；真实环境仍需微信凭证和合法域名联调。
 
 ### 管理后台
 
-后台提供默认管理员账号，密码使用 BCrypt 校验。登录成功后后端签发 HMAC-SHA256 JWT，管理接口通过过滤器保护 `/api/merchant/**`。当前已经具备后台接口保护能力，但还不是完整的多角色权限系统。
+后台密码使用 BCrypt 校验，登录成功后签发 HMAC-SHA256 双 Token。系统区分 `MERCHANT_ADMIN` 与 `PLATFORM_ADMIN`，商家 Token 绑定 `shopId` 并在服务端强制数据隔离，平台接口仅允许平台管理员访问。
+
+管理员连续登录失败达到配置阈值后会临时锁定，成功登录或平台管理员重置密码后解除锁定；失败计数使用账号悲观锁保护。
 
 ## 文件上传
 
-商家后台菜品图片上传到后端本地目录：
+图片上传通过 `FileStorageService` 抽象，当前本地实现写入后端目录：
 
 ```text
 server/uploads/
 ```
 
-后端通过 `/uploads/**` 暴露静态访问路径。当前仅允许 jpg、jpeg、png、webp、gif，默认最大 2MB。正式上线建议迁移到对象存储，并增加鉴权、生命周期和内容安全策略。
+后端通过 `/uploads/**` 暴露静态访问路径。当前仅允许 jpg、jpeg、png、webp、gif，默认最大 2MB，并校验扩展名、MIME 与图片文件头一致。正式上线可新增 OSS/COS/S3 实现，并增加鉴权、生命周期和内容安全策略。
 
 ## 基础数据
 
 后端启动时会自动补齐基础数据。后台还提供受 JWT 保护的重置接口：
 
 ```text
-POST /api/merchant/seed/reset
+POST /api/platform/seed/reset
 ```
 
-重置后包含 3 个店铺、12 个分类、12 个菜品、1 个默认地址和 5 笔不同状态订单。
+该接口仅允许平台管理员访问。重置后包含 3 个店铺、12 个分类、12 个菜品、1 个默认地址和 5 笔不同状态订单。
 
 ## 当前边界
 
 - 支付是模拟支付，不接入真实微信支付。
-- 用户端登录是默认登录，不是真实微信手机号或 openid 体系。
-- 后台已具备 JWT 保护，但不是完整 RBAC。
+- 微信登录和手机号授权代码已接入，但未使用真实凭证完成平台联调。
+- 当前角色模型覆盖平台管理员、商家管理员和用户，不包含更细粒度的菜单/操作权限配置。
 - 默认 H2 适合本地运行，不建议直接作为生产存储。
 - 图片上传使用本地磁盘，生产环境建议改为对象存储。

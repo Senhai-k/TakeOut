@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takeout.common.ApiResponse;
 import com.takeout.common.ErrorCode;
 import com.takeout.exception.BusinessException;
+import com.takeout.repository.AdminAccountRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +21,14 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
+    private final AdminAccountRepository adminAccountRepository;
+    private final AdminContext adminContext;
 
-    public AdminJwtAuthenticationFilter(JwtService jwtService, ObjectMapper objectMapper) {
+    public AdminJwtAuthenticationFilter(JwtService jwtService, ObjectMapper objectMapper, AdminAccountRepository adminAccountRepository, AdminContext adminContext) {
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
+        this.adminAccountRepository = adminAccountRepository;
+        this.adminContext = adminContext;
     }
 
     @Override
@@ -38,15 +43,33 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
         }
         try {
             String token = resolveBearerToken(request);
-            jwtService.verify(token);
+            var claims = jwtService.verify(token);
+            String requiredRole = request.getRequestURI().startsWith("/api/platform/") ? "PLATFORM_ADMIN" : "MERCHANT_ADMIN";
+            if (!"ACCESS".equals(claims.get("tokenType")) || !requiredRole.equals(claims.get("role"))) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED, "后台身份无效");
+            }
+            if (!(claims.get("adminId") instanceof Number adminId)) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED, "后台身份无效");
+            }
+            var account = adminAccountRepository.findById(adminId.longValue())
+                    .filter(item -> item.getStatus() == 1 && requiredRole.equals(item.getRole())
+                            && claims.get("tokenVersion") instanceof Number tokenVersion
+                            && item.getTokenVersion() == tokenVersion.intValue())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "后台账号已失效"));
+            if ("MERCHANT_ADMIN".equals(requiredRole)) {
+                if (!(claims.get("shopId") instanceof Number shopId) || account.getShopId() == null || !account.getShopId().equals(shopId.longValue())) {
+                    throw new BusinessException(ErrorCode.UNAUTHORIZED, "后台账号已失效");
+                }
+            }
+            adminContext.set(account.getId(), account.getRole(), account.getShopId());
             filterChain.doFilter(request, response);
         } catch (BusinessException exception) {
             writeUnauthorized(response, exception.getMessage());
-        }
+        } finally { adminContext.clear(); }
     }
 
     private boolean requiresAdminAuth(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/api/merchant/");
+        return request.getRequestURI().startsWith("/api/merchant/") || request.getRequestURI().startsWith("/api/platform/");
     }
 
     private String resolveBearerToken(HttpServletRequest request) {

@@ -25,29 +25,71 @@ public class JwtService {
     private final ObjectMapper objectMapper;
     private final byte[] secret;
     private final long expiresInSeconds;
+    private final long refreshExpiresInSeconds;
 
     public JwtService(
             ObjectMapper objectMapper,
             @Value("${takeout.jwt.secret:takeout-secret-change-me}") String secret,
-            @Value("${takeout.jwt.expires-in-seconds:86400}") long expiresInSeconds
+            @Value("${takeout.jwt.expires-in-seconds:86400}") long expiresInSeconds,
+            @Value("${takeout.jwt.refresh-expires-in-seconds:2592000}") long refreshExpiresInSeconds
     ) {
         this.objectMapper = objectMapper;
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
         this.expiresInSeconds = expiresInSeconds;
+        this.refreshExpiresInSeconds = refreshExpiresInSeconds;
     }
 
     public String createAdminToken(Long adminId, String username, String role) {
+        return createAdminToken(adminId, username, role, "PLATFORM_ADMIN".equals(role) ? null : 1L, 0);
+    }
+
+    public String createAdminToken(Long adminId, String username, String role, Long shopId) {
+        return createAdminToken(adminId, username, role, shopId, 0);
+    }
+
+    public String createAdminToken(Long adminId, String username, String role, Long shopId, int tokenVersion) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("adminId", adminId); claims.put("role", role); claims.put("tokenVersion", tokenVersion);
+        if (shopId != null) claims.put("shopId", shopId);
+        return createToken(username, claims, "ACCESS", expiresInSeconds);
+    }
+
+    public String createAdminRefreshToken(Long adminId, String username, String role) {
+        return createAdminRefreshToken(adminId, username, role, 0);
+    }
+
+    public String createAdminRefreshToken(Long adminId, String username, String role, int tokenVersion) {
+        return createToken(username, Map.of("adminId", adminId, "role", role, "tokenVersion", tokenVersion), "REFRESH", refreshExpiresInSeconds);
+    }
+
+    public String createAppUserToken(Long userId, String nickname) {
+        return createAppUserToken(userId, nickname, 0);
+    }
+
+    public String createAppUserToken(Long userId, String nickname, int tokenVersion) {
+        return createToken(String.valueOf(userId), Map.of("userId", userId, "nickname", nickname, "role", "APP_USER", "tokenVersion", tokenVersion), "ACCESS", expiresInSeconds);
+    }
+
+    public String createAppUserRefreshToken(Long userId) {
+        return createAppUserRefreshToken(userId, 0);
+    }
+
+    public String createAppUserRefreshToken(Long userId, int tokenVersion) {
+        return createToken(String.valueOf(userId), Map.of("userId", userId, "role", "APP_USER", "tokenVersion", tokenVersion), "REFRESH", refreshExpiresInSeconds);
+    }
+
+    private String createToken(String subject, Map<String, Object> claims,String tokenType,long lifetimeSeconds) {
         Instant now = Instant.now();
         Map<String, Object> header = Map.of(
                 "alg", "HS256",
                 "typ", "JWT"
         );
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("sub", username);
-        payload.put("adminId", adminId);
-        payload.put("role", role);
+        payload.put("sub", subject);
+        payload.putAll(claims);
+        payload.put("tokenType",tokenType);
         payload.put("iat", now.getEpochSecond());
-        payload.put("exp", now.plusSeconds(expiresInSeconds).getEpochSecond());
+        payload.put("exp", now.plusSeconds(lifetimeSeconds).getEpochSecond());
         try {
             String headerPart = encodeJson(header);
             String payloadPart = encodeJson(payload);

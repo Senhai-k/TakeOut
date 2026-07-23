@@ -2,6 +2,7 @@ package com.takeout.dto.app;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -15,6 +16,9 @@ public record CreateOrderRequest(
         @NotEmpty(message = "购物车商品不能为空")
         List<Long> cartItemIds,
 
-        String remark
+        String remark,
+
+        @Size(max = 64, message = "下单请求号过长")
+        String idempotencyKey
 ) {
 }

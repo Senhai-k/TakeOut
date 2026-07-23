@@ -6,12 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(name = "uk_order_user_idempotency", columnNames = {"user_id", "idempotency_key"}))
 public class Order {
 
     @Id
@@ -20,6 +22,9 @@ public class Order {
 
     @Column(nullable = false, unique = true, length = 32)
     private String orderNo;
+
+    @Column(length = 64)
+    private String idempotencyKey;
 
     @Column(nullable = false)
     private Long userId;
@@ -67,6 +72,10 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Version
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private Long version = 0L;
+
     public Long getId() {
         return id;
     }
@@ -82,6 +91,9 @@ public class Order {
     public void setOrderNo(String orderNo) {
         this.orderNo = orderNo;
     }
+
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
 
     public Long getUserId() {
         return userId;
@@ -210,4 +222,7 @@ public class Order {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

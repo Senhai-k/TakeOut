@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/merchant/seed")
+@RequestMapping("/api/platform/seed")
 public class MerchantSeedController {
 
     private final SeedDataService seedDataService;

@@ -1,4 +1,7 @@
 spring:
+  h2:
+    console:
+      enabled: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/takeout?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -8,8 +11,23 @@ spring:
     hibernate:
       ddl-auto: validate
     database-platform: org.hibernate.dialect.MySQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-migration-naming: true
+  sql:
+    init:
+      mode: never
 
 logging:
   level:
     root: info
     com.takeout: info
+
+takeout:
+  seed:
+    enabled: ${TAKEOUT_SEED_ENABLED:false}
+  jwt:
+    secret: ${TAKEOUT_JWT_SECRET}

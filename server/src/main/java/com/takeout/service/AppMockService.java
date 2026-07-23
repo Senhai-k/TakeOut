@@ -7,6 +7,7 @@ import com.takeout.domain.Category;
 import com.takeout.domain.Dish;
 import com.takeout.domain.Order;
 import com.takeout.domain.OrderItem;
+import com.takeout.domain.OrderReview;
 import com.takeout.domain.Shop;
 import com.takeout.domain.UserAddress;
 import com.takeout.domain.enums.OrderStatus;
@@ -17,13 +18,19 @@ import com.takeout.dto.app.CreateOrderResponse;
 import com.takeout.dto.app.DishResponse;
 import com.takeout.dto.app.OrderDetailResponse;
 import com.takeout.dto.app.OrderItemResponse;
+import com.takeout.dto.app.OrderReviewRequest;
+import com.takeout.dto.app.OrderReviewResponse;
 import com.takeout.dto.app.ShopResponse;
 import com.takeout.exception.BusinessException;
 import com.takeout.repository.CategoryRepository;
 import com.takeout.repository.DishRepository;
 import com.takeout.repository.OrderItemRepository;
 import com.takeout.repository.OrderRepository;
+import com.takeout.repository.OrderReviewRepository;
 import com.takeout.repository.ShopRepository;
+import com.takeout.repository.AppUserRepository;
+import com.takeout.repository.RefundRepository;
+import com.takeout.security.AppUserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,15 +46,21 @@ import java.util.stream.Collectors;
 public class AppMockService {
 
     private static final DateTimeFormatter ORDER_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-    private static final Long DEFAULT_USER_ID = 1L;
 
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepository;
     private final DishRepository dishRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderReviewRepository orderReviewRepository;
     private final AppAddressService appAddressService;
     private final AppCartService appCartService;
+    private final AppUserContext userContext;
+    private final PaymentService paymentService;
+    private final InventoryService inventoryService;
+    private final RefundService refundService;
+    private final AppUserRepository appUserRepository;
+    private final RefundRepository refundRepository;
 
     public AppMockService(
             ShopRepository shopRepository,
@@ -55,16 +68,30 @@ public class AppMockService {
             DishRepository dishRepository,
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
+            OrderReviewRepository orderReviewRepository,
             AppAddressService appAddressService,
-            AppCartService appCartService
+            AppCartService appCartService,
+            AppUserContext userContext,
+            PaymentService paymentService,
+            InventoryService inventoryService,
+            RefundService refundService,
+            AppUserRepository appUserRepository,
+            RefundRepository refundRepository
     ) {
         this.shopRepository = shopRepository;
         this.categoryRepository = categoryRepository;
         this.dishRepository = dishRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.orderReviewRepository = orderReviewRepository;
         this.appAddressService = appAddressService;
         this.appCartService = appCartService;
+        this.userContext = userContext;
+        this.paymentService = paymentService;
+        this.inventoryService = inventoryService;
+        this.refundService = refundService;
+        this.appUserRepository = appUserRepository;
+        this.refundRepository = refundRepository;
     }
 
     public ShopResponse getShop(Long shopId) {
@@ -93,6 +120,13 @@ public class AppMockService {
 
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
+        Long userId = userContext.requireUserId();
+        appUserRepository.findLockedById(userId).orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "用户不存在"));
+        String idempotencyKey = request.idempotencyKey() == null || request.idempotencyKey().isBlank() ? null : request.idempotencyKey().trim();
+        if (idempotencyKey != null) {
+            var existing = orderRepository.findByUserIdAndIdempotencyKey(userId, idempotencyKey);
+            if (existing.isPresent()) return toCreateOrderResponse(existing.get());
+        }
         Shop shop = getShopById(request.shopId());
         if (shop.getBusinessStatus() != 1) {
             throw new BusinessException(ErrorCode.CONFLICT, "店铺休息中");
@@ -115,11 +149,13 @@ public class AppMockService {
         if (goodsAmount.compareTo(shop.getMinOrderAmount()) < 0) {
             throw new BusinessException(ErrorCode.CONFLICT, "商品金额未达到起送价");
         }
+        inventoryService.deduct(itemSnapshots);
 
         LocalDateTime now = LocalDateTime.now();
         Order order = new Order();
         order.setOrderNo("TMP" + System.nanoTime());
-        order.setUserId(DEFAULT_USER_ID);
+        order.setUserId(userId);
+        order.setIdempotencyKey(idempotencyKey);
         order.setShopId(shop.getId());
         order.setAddressId(request.addressId());
         order.setReceiverName(address.getReceiverName());
@@ -146,18 +182,14 @@ public class AppMockService {
         orderItemRepository.saveAll(orderItems);
         appCartService.deleteItems(cartItems);
 
-        return new CreateOrderResponse(
-                savedOrder.getId(),
-                savedOrder.getOrderNo(),
-                savedOrder.getPayAmount(),
-                savedOrder.getOrderStatus()
-        );
+        return toCreateOrderResponse(savedOrder);
     }
 
     public PageResult<OrderDetailResponse> listOrders(Integer status, long page, long pageSize) {
+        Long userId = userContext.requireUserId();
         List<Order> orders = status == null
-                ? orderRepository.findByIsDeletedOrderByCreatedAtDesc(0)
-                : orderRepository.findByOrderStatusAndIsDeletedOrderByCreatedAtDesc(status, 0);
+                ? orderRepository.findByUserIdAndIsDeletedOrderByCreatedAtDesc(userId, 0)
+                : orderRepository.findByUserIdAndOrderStatusAndIsDeletedOrderByCreatedAtDesc(userId, status, 0);
         long safePage = Math.max(page, 1);
         long safePageSize = Math.max(pageSize, 1);
         int fromIndex = (int) Math.min((safePage - 1) * safePageSize, orders.size());
@@ -172,28 +204,28 @@ public class AppMockService {
     public OrderDetailResponse getOrderDetail(Long id) {
         Order order = orderRepository.findById(id)
                 .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getUserId().equals(userContext.requireUserId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "订单不存在"));
         return toOrderDetailResponse(order);
     }
 
     @Transactional
-    public OrderDetailResponse mockPay(Long id) {
+    public OrderDetailResponse mockPay(Long id, String requestId) {
         Order order = getOrderEntity(id);
-        if (!order.getOrderStatus().equals(OrderStatus.UNPAID.getCode())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "当前订单状态不能支付");
-        }
-        order.setPayStatus(PayStatus.PAID.getCode());
-        order.setOrderStatus(OrderStatus.PAID_WAIT_ACCEPT.getCode());
-        order.setUpdatedAt(LocalDateTime.now());
-        return toOrderDetailResponse(orderRepository.save(order));
+        return toOrderDetailResponse(paymentService.pay(order, requestId));
     }
 
     @Transactional
     public OrderDetailResponse cancelOrder(Long id) {
         Order order = getOrderEntity(id);
+        if (order.getOrderStatus().equals(OrderStatus.REFUNDED.getCode())) return toOrderDetailResponse(order);
         if (order.getOrderStatus() >= OrderStatus.DELIVERING.getCode()) {
             throw new BusinessException(ErrorCode.CONFLICT, "当前订单状态不能取消");
         }
+        if (order.getPayStatus().equals(PayStatus.PAID.getCode())) {
+            return toOrderDetailResponse(refundService.refund(order.getId(), "app-cancel-" + order.getId(), "用户取消订单", "APP_USER"));
+        }
+        inventoryService.restore(order.getId());
         order.setOrderStatus(OrderStatus.CANCELLED.getCode());
         order.setUpdatedAt(LocalDateTime.now());
         return toOrderDetailResponse(orderRepository.save(order));
@@ -210,14 +242,34 @@ public class AppMockService {
         return toOrderDetailResponse(orderRepository.save(order));
     }
 
+    @Transactional
+    public OrderReviewResponse reviewOrder(Long id, OrderReviewRequest request) {
+        Order order = getOrderEntity(id);
+        if (!order.getOrderStatus().equals(OrderStatus.COMPLETED.getCode())) {
+            throw new BusinessException(ErrorCode.CONFLICT, "订单完成后才能评价");
+        }
+        if (orderReviewRepository.findByOrderId(id).isPresent()) {
+            throw new BusinessException(ErrorCode.CONFLICT, "该订单已经评价");
+        }
+        OrderReview review = new OrderReview();
+        review.setOrderId(order.getId());
+        review.setUserId(order.getUserId());
+        review.setShopId(order.getShopId());
+        review.setRating(request.rating());
+        review.setContent(request.content() == null ? "" : request.content().trim());
+        review.setCreatedAt(LocalDateTime.now());
+        return toReviewResponse(orderReviewRepository.save(review));
+    }
+
     private Shop getAvailableShop() {
         return shopRepository.findFirstByStatusAndIsDeleted(1, 0)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "店铺不存在"));
     }
 
     private Order getOrderEntity(Long id) {
-        return orderRepository.findById(id)
+        return orderRepository.findLockedById(id)
                 .filter(item -> item.getIsDeleted() == 0)
+                .filter(item -> item.getUserId().equals(userContext.requireUserId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "订单不存在"));
     }
 
@@ -255,8 +307,19 @@ public class AppMockService {
                 order.getPayStatus(),
                 order.getOrderStatus(),
                 items,
-                order.getCreatedAt()
+                order.getCreatedAt(),
+                orderReviewRepository.findByOrderId(order.getId()).map(this::toReviewResponse).orElse(null),
+                refundRepository.findByOrderId(order.getId()).map(refund -> new com.takeout.dto.app.RefundResponse(
+                        refund.getId(), refund.getRefundNo(), refund.getAmount(), refund.getStatus(), refund.getReason(), refund.getSource(), refund.getCreatedAt())).orElse(null)
         );
+    }
+
+    private OrderReviewResponse toReviewResponse(OrderReview review) {
+        return new OrderReviewResponse(review.getId(), review.getOrderId(), review.getRating(), review.getContent(), review.getCreatedAt());
+    }
+
+    private CreateOrderResponse toCreateOrderResponse(Order order) {
+        return new CreateOrderResponse(order.getId(), order.getOrderNo(), order.getPayAmount(), order.getOrderStatus());
     }
 
     private ShopResponse toShopResponse(Shop shop) {
@@ -288,37 +351,11 @@ public class AppMockService {
         );
     }
 
-    private OrderItemResponse toOrderItemResponse(Dish dish, int quantity) {
-        if (dish.getStock() < quantity) {
-            throw new BusinessException(ErrorCode.CONFLICT, "商品库存不足");
-        }
-        BigDecimal subtotalAmount = dish.getPrice().multiply(BigDecimal.valueOf(quantity));
-        dish.setStock(dish.getStock() - quantity);
-        dish.setSalesCount(dish.getSalesCount() + quantity);
-        dish.setUpdatedAt(LocalDateTime.now());
-        dishRepository.save(dish);
-        return new OrderItemResponse(
-                dish.getId(),
-                dish.getName(),
-                dish.getImageUrl(),
-                dish.getPrice(),
-                quantity,
-                null,
-                null,
-                null,
-                subtotalAmount
-        );
-    }
-
     private OrderItemResponse toOrderItemResponse(Dish dish, CartItem cartItem) {
         if (dish.getStock() < cartItem.getQuantity()) {
             throw new BusinessException(ErrorCode.CONFLICT, "商品库存不足");
         }
         BigDecimal subtotalAmount = dish.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-        dish.setStock(dish.getStock() - cartItem.getQuantity());
-        dish.setSalesCount(dish.getSalesCount() + cartItem.getQuantity());
-        dish.setUpdatedAt(LocalDateTime.now());
-        dishRepository.save(dish);
         return new OrderItemResponse(
                 dish.getId(),
                 dish.getName(),

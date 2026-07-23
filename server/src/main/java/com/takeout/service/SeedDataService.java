@@ -1,6 +1,7 @@
 package com.takeout.service;
 
 import com.takeout.domain.AdminAccount;
+import com.takeout.domain.AppUser;
 import com.takeout.domain.Category;
 import com.takeout.domain.Dish;
 import com.takeout.domain.Order;
@@ -11,11 +12,15 @@ import com.takeout.domain.enums.OrderStatus;
 import com.takeout.domain.enums.PayStatus;
 import com.takeout.dto.admin.SeedResetResponse;
 import com.takeout.repository.AdminAccountRepository;
+import com.takeout.repository.AppUserRepository;
 import com.takeout.repository.CartItemRepository;
 import com.takeout.repository.CategoryRepository;
 import com.takeout.repository.DishRepository;
 import com.takeout.repository.OrderItemRepository;
 import com.takeout.repository.OrderRepository;
+import com.takeout.repository.OrderReviewRepository;
+import com.takeout.repository.PaymentTransactionRepository;
+import com.takeout.repository.RefundRepository;
 import com.takeout.repository.ShopRepository;
 import com.takeout.repository.UserAddressRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,9 +42,13 @@ public class SeedDataService {
     private final DishRepository dishRepository;
     private final UserAddressRepository userAddressRepository;
     private final AdminAccountRepository adminAccountRepository;
+    private final AppUserRepository appUserRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderReviewRepository orderReviewRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
+    private final RefundRepository refundRepository;
     private final PasswordEncoder passwordEncoder;
 
     public SeedDataService(
@@ -48,9 +57,13 @@ public class SeedDataService {
             DishRepository dishRepository,
             UserAddressRepository userAddressRepository,
             AdminAccountRepository adminAccountRepository,
+            AppUserRepository appUserRepository,
             CartItemRepository cartItemRepository,
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
+            OrderReviewRepository orderReviewRepository,
+            PaymentTransactionRepository paymentTransactionRepository,
+            RefundRepository refundRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.shopRepository = shopRepository;
@@ -58,9 +71,13 @@ public class SeedDataService {
         this.dishRepository = dishRepository;
         this.userAddressRepository = userAddressRepository;
         this.adminAccountRepository = adminAccountRepository;
+        this.appUserRepository = appUserRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.orderReviewRepository = orderReviewRepository;
+        this.paymentTransactionRepository = paymentTransactionRepository;
+        this.refundRepository = refundRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -69,28 +86,34 @@ public class SeedDataService {
         LocalDateTime now = LocalDateTime.now();
         shopRepository.saveAll(shops(now));
         categoryRepository.saveAll(categories(now));
-        dishRepository.saveAll(dishes(now));
+        dishes(now).stream().filter(dish -> !dishRepository.existsById(dish.getId())).forEach(dishRepository::save);
         if (!userAddressRepository.existsById(1L)) {
             userAddressRepository.save(address(now));
         }
-        if (!adminAccountRepository.existsById(1L)) {
-            adminAccountRepository.save(adminAccount(now));
-        }
+        adminAccounts(now).stream().filter(account -> !adminAccountRepository.existsById(account.getId())).forEach(adminAccountRepository::save);
+        appUserRepository.saveAll(appUsers(now));
         return new SeedResetResponse(3, 12, 12, 1, 0);
     }
 
     @Transactional
     public SeedResetResponse reset() {
+        orderReviewRepository.deleteAll();
+        refundRepository.deleteAll();
+        paymentTransactionRepository.deleteAll();
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
         cartItemRepository.deleteAll();
+        dishRepository.deleteAll();
+        categoryRepository.deleteAll();
+        shopRepository.deleteAll();
 
         LocalDateTime now = LocalDateTime.now();
         shopRepository.saveAll(shops(now));
         categoryRepository.saveAll(categories(now));
         dishRepository.saveAll(dishes(now));
         userAddressRepository.save(address(now));
-        adminAccountRepository.save(adminAccount(now));
+        adminAccountRepository.saveAll(adminAccounts(now));
+        appUserRepository.saveAll(appUsers(now));
         int orders = seedOrders(now);
         return new SeedResetResponse(3, 12, 12, 1, orders);
     }
@@ -173,6 +196,11 @@ public class SeedDataService {
         orderItemRepository.saveAll(lines.stream()
                 .map(line -> toOrderItem(saved, line, createdAt))
                 .toList());
+        lines.forEach(line -> dishRepository.findById(line.dishId()).ifPresent(dish -> {
+            dish.setStock(dish.getStock() - line.quantity());
+            dish.setUpdatedAt(createdAt);
+            dishRepository.save(dish);
+        }));
     }
 
     private OrderItem toOrderItem(Order order, OrderLine line, LocalDateTime createdAt) {
@@ -192,15 +220,23 @@ public class SeedDataService {
         return item;
     }
 
-    private AdminAccount adminAccount(LocalDateTime now) {
+    private List<AdminAccount> adminAccounts(LocalDateTime now) {
+        return List.of(
+                adminAccount(1L, "admin", "系统管理员", "MERCHANT_ADMIN", 1L, "玛利亚披萨", now),
+                adminAccount(2L, "merchant2", "拉面馆管理员", "MERCHANT_ADMIN", 2L, "南山拉面馆", now),
+                adminAccount(3L, "platform", "平台管理员", "PLATFORM_ADMIN", null, "TakeOut 平台", now)
+        );
+    }
+
+    private AdminAccount adminAccount(Long id, String username, String displayName, String role, Long shopId, String shopName, LocalDateTime now) {
         AdminAccount adminAccount = new AdminAccount();
-        adminAccount.setId(1L);
-        adminAccount.setUsername("admin");
+        adminAccount.setId(id);
+        adminAccount.setUsername(username);
         adminAccount.setPasswordHash(passwordEncoder.encode("123456"));
-        adminAccount.setDisplayName("系统管理员");
-        adminAccount.setRole("MERCHANT_ADMIN");
-        adminAccount.setShopId(DEFAULT_SHOP_ID);
-        adminAccount.setShopName("玛利亚披萨");
+        adminAccount.setDisplayName(displayName);
+        adminAccount.setRole(role);
+        adminAccount.setShopId(shopId);
+        adminAccount.setShopName(shopName);
         adminAccount.setStatus(1);
         adminAccount.setCreatedAt(now);
         adminAccount.setUpdatedAt(now);
@@ -314,6 +350,18 @@ public class SeedDataService {
         address.setCreatedAt(now);
         address.setUpdatedAt(now);
         return address;
+    }
+
+    private List<AppUser> appUsers(LocalDateTime now) {
+        return List.of(appUser(1L, "dev-user-1", "张三", "13800000000", now),
+                appUser(2L, "dev-user-2", "李四", "13900000000", now));
+    }
+
+    private AppUser appUser(Long id, String openId, String nickname, String phone, LocalDateTime now) {
+        AppUser user = new AppUser();
+        user.setId(id); user.setOpenId(openId); user.setNickname(nickname); user.setPhone(phone);
+        user.setStatus(1); user.setCreatedAt(now); user.setUpdatedAt(now);
+        return user;
     }
 
     private OrderLine orderLine(Long dishId, String name, String price, int quantity) {

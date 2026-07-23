@@ -24,6 +24,7 @@ mvn spring-boot:run
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8080/api/health
+Invoke-RestMethod http://127.0.0.1:8080/actuator/health/readiness
 ```
 
 期望结果：
@@ -108,6 +109,8 @@ Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object 
 ## 发布前检查
 
 - GitHub Actions CI 通过。
+- Compose 配置、PowerShell 脚本语法和仓库运行产物检查通过。
+- 生产环境变量已基于 `.env.example` 配置，所有密钥均替换为空间独立的强随机值。
 - 不上传 `server/target/`。
 - 不上传 `admin-web/dist/`。
 - 不上传 `admin-web/node_modules/`。

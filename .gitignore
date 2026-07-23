@@ -24,6 +24,7 @@ server/*.trace.db
 server/*.mv.db
 server/*-current.log
 server/*-current.err.log
+backups/
 
 # WeChat developer local config
 project.private.config.json

@@ -35,7 +35,8 @@ async function createOrder(payload) {
         shopId: payload.shopId,
         addressId: backendAddress.id,
         cartItemIds: backendCartItems.map(item => item.id),
-        remark: payload.remark
+        remark: payload.remark,
+        idempotencyKey: payload.idempotencyKey
       }
     })
     backendOrder = await request({ url: `/app/orders/${backendResult.orderId}` })
@@ -112,7 +113,8 @@ async function mockPayOrder(id) {
   try {
     const order = orderStore.mergeLocalMetadata(orderStore.normalizeBackendOrder(await request({
       url: `/app/orders/${id}/mock-pay`,
-      method: 'POST'
+      method: 'POST',
+      data: { requestId: `miniapp-mock-pay-${id}` }
     })))
     orderStore.saveLocalOrder(order)
     return order

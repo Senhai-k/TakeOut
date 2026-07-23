@@ -8,6 +8,7 @@ const settingsService = require('../../services/settings')
 Page({
   data: {
     baseUrl: '',
+    wechatLoginEnabled: false,
     user: null,
     favoriteCount: 0,
     paymentMethod: paymentService.getPaymentMethod(),
@@ -31,6 +32,7 @@ Page({
     const user = authService.getStoredUser()
     this.setData({
       baseUrl: app.globalData.baseUrl,
+      wechatLoginEnabled: app.globalData.wechatLoginEnabled,
       user,
       favoriteCount: favoriteService.listFavorites().length,
       paymentMethod: paymentService.getPaymentMethod(),
@@ -123,7 +125,7 @@ Page({
     }
     this.setData({ loggingIn: true })
     try {
-      const user = await authService.loginDefaultUser()
+      const user = await authService.loginCurrentUser()
       this.setData({
         user,
         profileStats: this.buildStats()
@@ -138,8 +140,8 @@ Page({
     }
   },
 
-  logout() {
-    authService.clearUser()
+  async logout() {
+    await authService.logoutUser()
     this.setData({
       user: null,
       profileStats: this.buildStats()
@@ -148,6 +150,21 @@ Page({
       title: '已退出登录',
       icon: 'none'
     })
+  },
+
+  async bindPhone(event) {
+    const phoneCode = event.detail && event.detail.code
+    if (!phoneCode) {
+      wx.showToast({ title: '未获得手机号授权', icon: 'none' })
+      return
+    }
+    try {
+      const user = await authService.bindPhone(phoneCode)
+      this.setData({ user })
+      wx.showToast({ title: '手机号已绑定', icon: 'success' })
+    } catch (error) {
+      wx.showToast({ title: error.message || '手机号绑定失败', icon: 'none' })
+    }
   },
 
   handleMenu(event) {

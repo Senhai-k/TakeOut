@@ -4,7 +4,7 @@
       <view class="avatar">{{user ? user.avatarText : '未'}}</view>
       <view class="user-main">
         <view class="user-name">{{user ? user.nickname : '未登录'}}</view>
-        <view class="user-meta">{{user ? user.phone : '登录后同步订单和地址'}}</view>
+        <view class="user-meta">{{user ? (user.phone || '未绑定手机号') : '登录后同步订单和地址'}}</view>
       </view>
     </view>
     <button wx:if="{{!user}}" class="login-btn" loading="{{loggingIn}}" bindtap="login">登录</button>
@@ -30,6 +30,7 @@
   </view>
 
   <button wx:if="{{user}}" class="logout" bindtap="logout">退出登录</button>
+  <button wx:if="{{user && !user.phone && wechatLoginEnabled}}" class="logout" open-type="getPhoneNumber" bindgetphonenumber="bindPhone">绑定手机号</button>
 
   <view wx:if="{{paymentSheetVisible}}" class="sheet-mask" bindtap="closePaymentSheet"></view>
   <view wx:if="{{paymentSheetVisible}}" class="payment-sheet">

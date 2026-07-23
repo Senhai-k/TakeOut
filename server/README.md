@@ -57,11 +57,4 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 mvn test
 ```
 
-最近一次本地结果：
-
-```text
-Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
-BUILD SUCCESS
-```
-
 接口详情见根目录 [docs/api.md](../docs/api.md)。

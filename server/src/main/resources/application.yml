@@ -20,12 +20,47 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/h2-upgrade.sql
   servlet:
     multipart:
       max-file-size: 2MB
       max-request-size: 2MB
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:2s}
 
 takeout:
+  payment:
+    provider: ${TAKEOUT_PAYMENT_PROVIDER:mock}
+  wechat:
+    mode: ${TAKEOUT_WECHAT_MODE:dev}
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+  auth:
+    admin:
+      max-failed-attempts: ${TAKEOUT_ADMIN_MAX_FAILED_ATTEMPTS:5}
+      lock-minutes: ${TAKEOUT_ADMIN_LOCK_MINUTES:15}
+  rate-limit:
+    enabled: ${TAKEOUT_RATE_LIMIT_ENABLED:true}
+    provider: ${TAKEOUT_RATE_LIMIT_PROVIDER:memory}
+    redis-fail-open: ${TAKEOUT_RATE_LIMIT_REDIS_FAIL_OPEN:false}
+    window-seconds: ${TAKEOUT_RATE_LIMIT_WINDOW_SECONDS:60}
+    auth-max-requests: ${TAKEOUT_RATE_LIMIT_AUTH_MAX_REQUESTS:20}
+    upload-max-requests: ${TAKEOUT_RATE_LIMIT_UPLOAD_MAX_REQUESTS:30}
+    trust-forwarded-headers: ${TAKEOUT_RATE_LIMIT_TRUST_FORWARDED_HEADERS:false}
+  jwt:
+    refresh-expires-in-seconds: ${TAKEOUT_JWT_REFRESH_EXPIRES_IN_SECONDS:2592000}
+  order:
+    unpaid-timeout-minutes: ${TAKEOUT_UNPAID_TIMEOUT_MINUTES:15}
+    expiration-scan-millis: ${TAKEOUT_EXPIRATION_SCAN_MILLIS:60000}
   upload:
     dir: ${TAKEOUT_UPLOAD_DIR:uploads}
     max-size-bytes: ${TAKEOUT_UPLOAD_MAX_SIZE_BYTES:2097152}
@@ -39,3 +74,23 @@ logging:
   level:
     root: info
     com.takeout: debug
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} level=%-5level requestId=%X{requestId:-} logger=%logger{36} message=%msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: false
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

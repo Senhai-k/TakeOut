@@ -64,6 +64,13 @@
       </view>
     </view>
 
+    <view wx:if="{{order.refund}}" class="panel info-panel">
+      <view class="section-title">退款信息</view>
+      <view class="info-row"><text class="info-label">退款单号</text><text class="info-value">{{order.refund.refundNo}}</text></view>
+      <view class="info-row"><text class="info-label">退款金额</text><text class="info-value">¥{{order.refundAmountText}}</text></view>
+      <view class="info-row"><text class="info-label">退款原因</text><text class="info-value">{{order.refund.reason}}</text></view>
+    </view>
+
     <view wx:if="{{order.hasReview}}" class="panel review-panel">
       <view class="section-title">用户评价</view>
       <view class="review-stars">
