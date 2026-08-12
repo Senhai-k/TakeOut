@@ -16,7 +16,9 @@
 
 ### 用户端微信小程序
 
-<img src="docs/screenshots/miniapp-home.png" alt="小程序首页" width="260"> <img src="docs/screenshots/miniapp-orders.png" alt="小程序订单列表" width="260"> <img src="docs/screenshots/miniapp-profile.png" alt="小程序个人中心" width="260">
+| 首页 | 订单 | 我的 |
+| --- | --- | --- |
+| <img src="docs/screenshots/miniapp-home.png" alt="小程序首页" width="220"> | <img src="docs/screenshots/miniapp-orders.png" alt="小程序订单列表" width="220"> | <img src="docs/screenshots/miniapp-profile.png" alt="小程序个人中心" width="220"> |
 
 ### 商家管理后台
 
