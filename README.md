@@ -14,27 +14,9 @@
 
 ## 演示示例
 
-### 用户端微信小程序
-
-| 首页 | 订单 | 我的 |
+| 用户端微信小程序 | 商家管理后台 | 平台控制台 |
 | --- | --- | --- |
-| <img src="docs/screenshots/miniapp-home.png" alt="小程序首页" width="220"> | <img src="docs/screenshots/miniapp-orders.png" alt="小程序订单列表" width="220"> | <img src="docs/screenshots/miniapp-profile.png" alt="小程序个人中心" width="220"> |
-
-### 商家管理后台
-
-![商家经营概览](docs/screenshots/merchant-overview.png)
-
-![商家订单管理](docs/screenshots/merchant-orders.png)
-
-<img src="docs/screenshots/merchant-mobile.png" alt="商家后台移动端适配" width="390">
-
-### 平台控制台
-
-![平台经营概览](docs/screenshots/platform-overview.png)
-
-![平台订单管理](docs/screenshots/platform-orders.png)
-
-<img src="docs/screenshots/platform-mobile.png" alt="平台控制台移动端适配" width="390">
+| <img src="docs/screenshots/miniapp-home.png" alt="小程序首页" width="220"> | <img src="docs/screenshots/merchant-overview.png" alt="商家经营概览" width="320"> | <img src="docs/screenshots/platform-overview.png" alt="平台经营概览" width="320"> |
 
 ## 技术栈
 
