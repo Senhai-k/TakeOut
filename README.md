@@ -12,6 +12,28 @@
 - 订单数据：后端优先，保留本地 fallback，并统一合并支付方式、评价等本地补充字段。
 - 工程验证：后端接口测试、管理后台生产构建、小程序 JS 语法检查和 GitHub Actions CI。
 
+## 演示示例
+
+### 用户端微信小程序
+
+<img src="docs/screenshots/miniapp-home.png" alt="小程序首页" width="260"> <img src="docs/screenshots/miniapp-orders.png" alt="小程序订单列表" width="260"> <img src="docs/screenshots/miniapp-profile.png" alt="小程序个人中心" width="260">
+
+### 商家管理后台
+
+![商家经营概览](docs/screenshots/merchant-overview.png)
+
+![商家订单管理](docs/screenshots/merchant-orders.png)
+
+<img src="docs/screenshots/merchant-mobile.png" alt="商家后台移动端适配" width="390">
+
+### 平台控制台
+
+![平台经营概览](docs/screenshots/platform-overview.png)
+
+![平台订单管理](docs/screenshots/platform-orders.png)
+
+<img src="docs/screenshots/platform-mobile.png" alt="平台控制台移动端适配" width="390">
+
 ## 技术栈
 
 | 模块 | 技术 |
