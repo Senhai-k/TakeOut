@@ -1,23 +1,23 @@
-# Contributing
+# 贡献指南
 
-TakeOut is split into three surfaces:
+TakeOut 由三个主要端组成：
 
-- `miniapp/`: WeChat mini program user client.
-- `admin-web/`: Vue 3 merchant and platform console.
-- `server/`: Spring Boot backend service.
+- `miniapp/`：用户端微信小程序。
+- `admin-web/`：Vue 3 商家后台和平台控制台。
+- `server/`：Spring Boot 后端服务。
 
-## Local Validation
+## 本地验证
 
-Run the checks that match the files you changed.
+请根据本次修改范围运行对应检查。
 
-Backend:
+后端测试：
 
 ```powershell
 cd server
 mvn test
 ```
 
-Admin web:
+管理后台构建：
 
 ```powershell
 cd admin-web
@@ -25,21 +25,21 @@ npm install
 npm run build
 ```
 
-Miniapp JavaScript syntax:
+小程序 JavaScript 语法检查：
 
 ```powershell
 Get-ChildItem -LiteralPath miniapp -Recurse -File -Filter *.js | ForEach-Object { node --check $_.FullName }
 ```
 
-Deployment configuration:
+部署配置检查：
 
 ```powershell
 docker compose -f deploy/docker/docker-compose.yml config --quiet
 ```
 
-## Pull Requests
+## Pull Request 要求
 
-- Keep backend, admin-web, and miniapp changes scoped when possible.
-- Include screenshots for visible UI changes.
-- Do not commit generated build output, local databases, logs, `.env`, or WeChat private project config.
-- Use `.env.example` as the public variable reference and keep real secrets out of the repository.
+- 尽量保持后端、管理后台、小程序的修改边界清晰。
+- 涉及界面变化时，请附上截图或说明影响页面。
+- 不要提交构建产物、本地数据库、日志、`.env`、微信开发者工具私有配置。
+- `.env.example` 只作为公开变量示例，真实密钥不要进入仓库。

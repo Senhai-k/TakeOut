@@ -1,22 +1,22 @@
-# Security Policy
+# 安全说明
 
-## Supported Version
+## 支持范围
 
-This repository currently tracks development on the `main` branch.
+当前仓库以 `main` 分支作为主要维护版本。
 
-## Reporting
+## 安全问题报告
 
-Do not open a public issue for secrets, authentication bypasses, payment flaws, or data exposure reports.
+如果发现密钥泄露、认证绕过、支付风险或数据暴露问题，请不要直接创建公开 Issue。
 
-Please report security concerns privately to the repository owner through GitHub contact channels. Include:
+请通过 GitHub 仓库所有者的私有联系渠道反馈，并尽量包含：
 
-- Affected surface: `miniapp`, `admin-web`, `server`, or deployment.
-- Steps to reproduce.
-- Expected impact.
-- Relevant logs, screenshots, or request samples with secrets redacted.
+- 影响范围：`miniapp`、`admin-web`、`server` 或部署配置。
+- 复现步骤。
+- 可能影响。
+- 相关日志、截图或请求样例，注意隐藏敏感信息。
 
-## Secret Handling
+## 密钥处理
 
-- Never commit real `.env` files, JWT secrets, database passwords, Redis passwords, WeChat credentials, certificates, or payment keys.
-- `.env.example` is the only environment file intended for version control.
-- Demo credentials in documentation are public demo values only and must not be reused in production.
+- 不要提交真实 `.env` 文件、JWT 密钥、数据库密码、Redis 密码、微信凭证、证书或支付密钥。
+- `.env.example` 是唯一应提交到仓库的环境变量示例文件。
+- 文档中的演示账号和默认值仅用于本地演示，不应在生产环境复用。

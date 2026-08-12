@@ -1,29 +1,29 @@
 ---
-name: Bug report
-about: Report a reproducible defect in TakeOut
+name: 缺陷反馈
+about: 反馈 TakeOut 中可复现的问题
 title: "[Bug] "
 labels: bug
 assignees: ""
 ---
 
-## Environment
+## 环境信息
 
-- Surface: miniapp / admin-web / server / deployment
-- Branch or commit:
-- Runtime:
+- 影响端：miniapp / admin-web / server / deployment
+- 分支或提交：
+- 运行环境：
 
-## Steps To Reproduce
+## 复现步骤
 
 1. 
 2. 
 3. 
 
-## Expected Behavior
+## 预期表现
 
 
-## Actual Behavior
+## 实际表现
 
 
-## Logs Or Screenshots
+## 日志或截图
 
 

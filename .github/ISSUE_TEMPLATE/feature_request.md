@@ -1,25 +1,25 @@
 ---
-name: Feature request
-about: Suggest an improvement or new workflow
+name: 功能建议
+about: 提出功能改进或新流程建议
 title: "[Feature] "
 labels: enhancement
 assignees: ""
 ---
 
-## Target Surface
+## 目标范围
 
 - miniapp / admin-web / server / deployment / docs
 
-## User Story
+## 用户场景
 
 
-## Proposed Behavior
+## 期望行为
 
 
-## Acceptance Criteria
+## 验收标准
 
 - 
 
-## Additional Context
+## 补充信息
 
 
