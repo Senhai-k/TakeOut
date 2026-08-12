@@ -48,6 +48,8 @@
 - [运行检查清单](docs/checklist.md)：本地运行和发布前检查项。
 - [接口文档](docs/api.md)：用户端和商家端 API。
 - [数据库设计](docs/database.md)：核心表结构和数据模型。
+- [贡献指南](CONTRIBUTING.md)：本地验证、PR 要求和提交注意事项。
+- [安全说明](SECURITY.md)：安全问题报告方式和密钥处理规则。
 
 ## 本地运行
 
